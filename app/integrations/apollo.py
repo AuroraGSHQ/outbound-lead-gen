@@ -34,7 +34,15 @@ class ApolloClient:
         if not api_key:
             raise ValueError("Apollo API key is required")
         self._api_key = api_key
-        self._client = httpx.Client(base_url=APOLLO_BASE_URL, timeout=timeout)
+        # Apollo requires the key as a request header, not a body/query param —
+        # sending it as "api_key" in the JSON body (an older pattern still
+        # shown in some third-party docs) gets rejected with 422
+        # INVALID_API_KEY_LOCATION. See https://docs.apollo.io/docs/test-api-key
+        self._client = httpx.Client(
+            base_url=APOLLO_BASE_URL,
+            timeout=timeout,
+            headers={"X-Api-Key": api_key, "Content-Type": "application/json"},
+        )
 
     def close(self) -> None:
         self._client.close()
@@ -59,7 +67,6 @@ class ApolloClient:
         running this for real.
         """
         payload: dict[str, Any] = {
-            "api_key": self._api_key,
             "page": page,
             "per_page": per_page,
         }

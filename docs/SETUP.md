@@ -9,9 +9,17 @@ Get a key from [console.anthropic.com](https://console.anthropic.com), set
 ## 2. Apollo.io (lead sourcing)
 
 Sign up at [apollo.io](https://www.apollo.io), grab an API key from
-Settings → Integrations → API, set `APOLLO_API_KEY`. Their free tier has
-limited credits/month, which is plenty to start — the bot respects
-`DAILY_OUTREACH_CAP` so it won't burn through your quota unexpectedly.
+Settings → Integrations → API, set `APOLLO_API_KEY`.
+
+**API access requires a paid plan.** A free or Professional-Trial account
+can use Apollo's own web UI to search for leads, but calling the search API
+directly (what this bot does) gets rejected with `403 API_INACCESSIBLE` —
+their error message points you at apollo.io/pricing. Confirmed against the
+live API while building this: the auth itself (the request needs the key in
+an `X-Api-Key` header, not the request body — some older docs/examples show
+it the other way) works fine once you're on a plan that includes API access.
+Check your current plan's API access before assuming a failure here is a
+code bug.
 
 ## 3. Gmail (sending + reading replies)
 
