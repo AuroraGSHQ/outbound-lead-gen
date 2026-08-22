@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="grid">
+  <div class="card stat"><div class="n">{{ counts.new_leads }}</div><div class="label">New (below ICP threshold)</div></div>
+  <div class="card stat"><div class="n">{{ counts.queued_leads }}</div><div class="label">Queued for outreach</div></div>
+  <div class="card stat"><div class="n">{{ counts.contacted }}</div><div class="label">Contacted</div></div>
+  <div class="card stat"><div class="n">{{ counts.replied }}</div><div class="label">Replied</div></div>
+  <div class="card stat"><div class="n">{{ counts.interested }}</div><div class="label">Interested</div></div>
+  <div class="card stat"><div class="n">{{ counts.meetings_booked }}</div><div class="label">Meetings booked</div></div>
+</div>
+<p><a href="/approvals"><strong>{{ counts.pending_approvals }}</strong> draft(s) waiting on your approval →</a></p>
+{% endblock %}

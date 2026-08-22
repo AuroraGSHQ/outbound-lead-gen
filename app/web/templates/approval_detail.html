@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Review draft</h1>
+<div class="card">
+  <div class="meta">
+    To: {{ lead.contact_name }} ({{ lead.contact_title }} at {{ lead.company_name }}) &lt;{{ lead.contact_email }}&gt;<br>
+    ICP score: {{ lead.icp_score }} — {{ lead.score_reasons }}
+  </div>
+  <form method="post" action="/approvals/{{ message.id }}/approve">
+    <label><strong>Subject:</strong> {{ message.subject }}</label>
+    <textarea name="body">{{ message.body }}</textarea>
+    <p>
+      <button class="approve" type="submit">Approve &amp; send</button>
+    </p>
+  </form>
+  <form method="post" action="/approvals/{{ message.id }}/reject">
+    <input type="text" name="reason" placeholder="Why reject? (optional)" style="width: 60%;">
+    <button class="reject" type="submit">Reject</button>
+  </form>
+</div>
+<p><a href="/approvals">← back to queue</a></p>
+{% endblock %}

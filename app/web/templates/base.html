@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Outbound Lead-Gen Bot{% endblock %}</title>
+  <style>
+    body { font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 760px; margin: 40px auto; color: #1a1a1a; padding: 0 16px; }
+    a { color: #2b6cb0; }
+    nav a { margin-right: 16px; font-weight: 600; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat { text-align: center; }
+    .stat .n { font-size: 28px; font-weight: 700; }
+    .stat .label { color: #666; font-size: 13px; }
+    textarea { width: 100%; min-height: 220px; font-family: inherit; font-size: 14px; padding: 8px; }
+    button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    .approve { background: #2f855a; color: white; }
+    .reject { background: #c53030; color: white; margin-left: 8px; }
+    .meta { color: #666; font-size: 13px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <nav><a href="/">Dashboard</a><a href="/approvals">Pending approvals</a></nav>
+  <hr>
+  {% block content %}{% endblock %}
+</body>
+</html>

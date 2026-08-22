@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Pending approvals ({{ items|length }})</h1>
+{% if not items %}
+  <p>Nothing waiting on you right now.</p>
+{% endif %}
+{% for m in items %}
+  <div class="card">
+    <div class="meta">To: {{ m.conversation.lead.contact_name }} &lt;{{ m.conversation.lead.contact_email }}&gt; — {{ m.conversation.lead.company_name }}</div>
+    <strong>{{ m.subject }}</strong>
+    <p>{{ m.body[:200] }}{% if m.body|length > 200 %}…{% endif %}</p>
+    <a href="/approvals/{{ m.id }}">Review →</a>
+  </div>
+{% endfor %}
+{% endblock %}

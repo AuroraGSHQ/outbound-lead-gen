@@ -1,0 +1,41 @@
+# Ideal Customer Profile — copy to config/icp.yaml and edit for your business.
+# This drives both what Apollo.io searches for and how leads get scored/ranked
+# ("best clients" = highest score). Nothing here is a hard filter on its own;
+# min_score_to_contact is what actually gates outreach.
+
+target_industries:
+  - "Software"
+  - "Marketing & Advertising"
+  - "Financial Services"
+
+target_titles:
+  - "CEO"
+  - "Founder"
+  - "Co-Founder"
+  - "VP Sales"
+  - "Head of Growth"
+  - "Director of Marketing"
+
+company_size_min: 10
+company_size_max: 500
+
+target_locations:
+  - "United States"
+  - "Canada"
+
+# Extra points if these words show up in the company's name/description.
+keywords_boost:
+  - "Series A"
+  - "Series B"
+  - "hiring"
+  - "SaaS"
+
+# Never contact these (personal-email domains, competitors, existing customers).
+exclude_domains:
+  - "gmail.com"
+  - "yahoo.com"
+  - "hotmail.com"
+
+# Score is 0.0-1.0 (see app/icp.py). Below this, a lead is stored but never
+# queued for outreach.
+min_score_to_contact: 0.6
