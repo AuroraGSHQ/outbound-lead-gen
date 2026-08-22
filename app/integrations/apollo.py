@@ -3,7 +3,19 @@
 Apollo's "mixed people search" endpoint (POST /v1/mixed_people/search) lets
 you filter by organization industry/headcount/location and person title in
 one call, which is exactly the ICP filter shape we need. Docs:
-https://apolloio.github.io/apollo-api-docs/
+https://docs.apollo.io/docs/find-people-using-filters
+
+Two things worth knowing if you extend this:
+- `organization_locations` filters by the *company's* HQ location, which is
+  what matters for a local trade business (you don't care where an
+  individual contact happens to live, you care where the business you'd
+  service is). We use that, not `person_locations`.
+- Industry filtering has two modes: `organization_industry_tag_ids` wants
+  Apollo's own opaque tag IDs (looked up via a separate picklist endpoint —
+  not worth the extra round trip here), while `q_organization_keyword_tags`
+  takes plain free-text keywords ("general contractor", "property
+  management", ...) and matches against them directly. We use the latter so
+  config/icp.yaml can just list human-readable industries/keywords.
 
 We keep this client dumb (search in, plain dicts out) — all
 scoring/deduping/decision logic lives in app/icp.py and app/services/sourcing.py.
@@ -38,7 +50,14 @@ class ApolloClient:
         page: int = 1,
         per_page: int = 25,
     ) -> list[dict[str, Any]]:
-        """Search for people matching ICP filters, return normalized candidate dicts."""
+        """Search for people matching ICP filters, return normalized candidate dicts.
+
+        `locations` filters by the target company's HQ location (city/state/
+        region strings like "Austin, Texas") — for a local service business
+        this is the filter that actually keeps leads inside your service
+        area, so make sure config/icp.yaml's target_locations is set before
+        running this for real.
+        """
         payload: dict[str, Any] = {
             "api_key": self._api_key,
             "page": page,
@@ -47,9 +66,9 @@ class ApolloClient:
         if titles:
             payload["person_titles"] = titles
         if locations:
-            payload["person_locations"] = locations
+            payload["organization_locations"] = locations
         if industries:
-            payload["organization_industry_tag_ids"] = industries
+            payload["q_organization_keyword_tags"] = industries
         if company_size_min is not None or company_size_max is not None:
             lo = company_size_min or 1
             hi = company_size_max or 100000

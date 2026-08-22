@@ -5,6 +5,16 @@ Profile, drafts personalized cold emails, carries the reply conversation,
 gets calls booked on your calendar, and keeps you in the loop the whole way
 — with every outbound message queued for your approval by default.
 
+The default config (`config/icp.example.yaml`) is tuned for a post-construction
+cleanup business targeting general contractors, builders, remodelers,
+developers, property managers, and real estate agents — the B2B relationships
+that actually generate repeat work in that trade. This targets businesses,
+not homeowners: Apollo (the lead-sourcing data source) is a B2B contact
+database, so it structurally can't reach individual homeowners, and cold
+emailing them wouldn't be the right channel even if it could — that's Google
+Business Profile / Local Services Ads / Yelp territory, a different system
+than this one.
+
 ## What it actually does
 
 1. **Sources leads** — searches Apollo.io on a schedule using the filters in

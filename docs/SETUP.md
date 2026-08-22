@@ -71,6 +71,48 @@ without emailing them) but never queued for outreach.
 Set `OWNER_EMAIL` to where you want the daily digest and meeting-booked
 alerts sent (defaults can just be your own address).
 
+## Sizing your outreach volume (read this before chasing an aggressive revenue target)
+
+If the goal is a specific revenue number in a specific window, work the math
+backwards instead of just cranking `DAILY_OUTREACH_CAP` up:
+
+```
+jobs needed           = revenue target / average job value
+leads needed to book   = jobs needed / your close rate (booked call → job)
+                          (guess 20-30% until you have real data)
+calls needed to book   = leads needed to book / your call show/close rate
+replies needed         = calls needed / reply-to-call rate (guess 30-50%)
+emails needed to send  = replies needed / reply rate (cold B2B typically 2-8%)
+```
+
+Plug in your real average job value and close rate once you have a few data
+points — the first two weeks of this running are themselves how you find out
+those numbers, so don't over-trust a guess here.
+
+**The hard constraint that actually caps how fast you can scale this isn't
+Apollo credits or Claude tokens — it's Gmail deliverability.** Sending from a
+real Gmail/Workspace address gets you much better reply rates than a bulk
+sending platform, but it comes with real limits:
+
+- Gmail personal accounts cap around 500 sends/day; Workspace around
+  2,000/day — but you will get flagged as spam (and Google can suspend the
+  account) *long* before that ceiling if a previously low-volume address
+  suddenly starts sending 100+ cold emails a day.
+- Ramp gradually: start at `DAILY_OUTREACH_CAP=15-25`, hold for a week
+  watching your reply/bounce rate, then step up by ~20-30% every few days.
+  Going from 25/day to 25/day for the first two weeks, then increasing, will
+  get you to a sustainably higher volume faster than jumping straight to 100.
+- Every bounce or spam complaint hurts sender reputation more than a normal
+  send helps it — keep your lead list clean (Apollo email verification
+  status, the `exclude_domains` list, sensible ICP filters) rather than
+  maximizing raw volume.
+- If the math above says you need more daily volume than Gmail can sustain
+  even after ramping, the fix is a dedicated sending domain/mailbox (e.g. a
+  second Workspace mailbox warmed up over a few weeks) run in parallel — not
+  pushing one address past what it can safely carry. Ask if you want that
+  built; it's a config change (a second `GMAIL_*` credential set + a second
+  scheduler track) more than new code.
+
 ## Deployment
 
 This is a normal FastAPI app plus a background scheduler running in the
