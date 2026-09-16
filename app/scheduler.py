@@ -16,6 +16,7 @@ from modules.call_intelligence.jobs import register_jobs as register_call_intell
 from modules.contracts.jobs import register_jobs as register_contracts_jobs
 from modules.dialer.jobs import register_jobs as register_dialer_jobs
 from modules.notifications.jobs import register_jobs as register_notifications_jobs
+from modules.sync.jobs import register_jobs as register_sync_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ def start_scheduler() -> BackgroundScheduler:
     register_call_intelligence_jobs(scheduler)
     register_contracts_jobs(scheduler)
     register_notifications_jobs(scheduler)
+    register_sync_jobs(scheduler)
 
     scheduler.start()
     logger.info("Scheduler started with jobs: %s", [j.id for j in scheduler.get_jobs()])

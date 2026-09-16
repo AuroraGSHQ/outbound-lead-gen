@@ -32,6 +32,7 @@ from modules.call_intelligence.router import router as call_intelligence_router
 from modules.contracts.router import router as contracts_router
 from modules.dialer.router import router as dialer_router
 from modules.notifications.router import router as notifications_router
+from modules.sync.router import router as sync_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ app.include_router(dialer_router)
 app.include_router(call_intelligence_router)
 app.include_router(contracts_router)
 app.include_router(notifications_router)
+app.include_router(sync_router)
 
 
 def get_db():
