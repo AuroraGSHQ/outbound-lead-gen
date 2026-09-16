@@ -53,6 +53,49 @@ class Settings(BaseSettings):
     app_host: str = "0.0.0.0"
     app_port: int = 8000
 
+    # --- Owner phone (SMS notifications, and identifying your own manual
+    # calls when they come in through the Twilio recorded line) ---
+    owner_phone_number: str = ""
+
+    # --- Dialer (Twilio + Vapi/Retell) ---
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_phone_number: str = ""
+    voice_agent_provider: str = "vapi"  # or "retell"
+    vapi_api_key: str = ""
+    vapi_assistant_id: str = ""
+    retell_api_key: str = ""
+    retell_agent_id: str = ""
+    dialer_window_start_hour: int = 9   # local hour, inclusive
+    dialer_window_end_hour: int = 17    # local hour, exclusive
+    dialer_timezone: str = "America/New_York"
+    dialer_max_concurrency: int = 3
+    dialer_max_retries: int = 3
+    dialer_retry_spacing_minutes: int = 120
+    dialer_cooldown_hours: int = 24
+
+    # --- Call intelligence (Zoom + the Twilio recorded line for manual calls) ---
+    zoom_account_id: str = ""
+    zoom_client_id: str = ""
+    zoom_client_secret: str = ""
+    zoom_webhook_secret_token: str = ""
+    twilio_recorded_line_number: str = ""  # the Twilio number you route manual business calls through
+    deadline_max_reminders: int = 5
+
+    # --- Contracts (PandaDoc or DocuSign) ---
+    contracts_provider: str = "pandadoc"  # or "docusign"
+    pandadoc_api_key: str = ""
+    docusign_integration_key: str = ""
+    docusign_user_id: str = ""
+    docusign_account_id: str = ""
+    docusign_private_key_path: str = "data/docusign_private_key.pem"
+    docusign_base_url: str = "https://demo.docusign.net/restapi"
+    contract_template_id: str = ""
+
+    # --- Notifications (Stripe webhook + Twilio SMS delivery) ---
+    stripe_api_key: str = ""
+    stripe_webhook_secret: str = ""
+
     @property
     def is_autonomous(self) -> bool:
         return self.approval_mode.strip().lower() == "autonomous"
