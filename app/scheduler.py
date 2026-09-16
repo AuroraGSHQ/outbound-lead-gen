@@ -12,6 +12,10 @@ from apscheduler.triggers.cron import CronTrigger
 from app.config import get_settings
 from app.db import SessionLocal
 from app.services import conversation, notify, outreach, sourcing
+from modules.call_intelligence.jobs import register_jobs as register_call_intelligence_jobs
+from modules.contracts.jobs import register_jobs as register_contracts_jobs
+from modules.dialer.jobs import register_jobs as register_dialer_jobs
+from modules.notifications.jobs import register_jobs as register_notifications_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +65,14 @@ def start_scheduler() -> BackgroundScheduler:
     scheduler.add_job(job_generate_followups, CronTrigger(hour=8, minute=0), id="generate_followups")
     scheduler.add_job(job_poll_replies, CronTrigger(minute="*/10"), id="poll_replies")
     scheduler.add_job(job_send_digest, CronTrigger(hour=8, minute=30), id="send_digest")
+
+    # JARVIS modules — each owns its own job registration; see
+    # modules/README.md for the router.py/jobs.py integration contract.
+    register_dialer_jobs(scheduler)
+    register_call_intelligence_jobs(scheduler)
+    register_contracts_jobs(scheduler)
+    register_notifications_jobs(scheduler)
+
     scheduler.start()
     logger.info("Scheduler started with jobs: %s", [j.id for j in scheduler.get_jobs()])
     return scheduler

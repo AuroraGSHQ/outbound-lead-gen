@@ -64,8 +64,10 @@ class Settings(BaseSettings):
     voice_agent_provider: str = "vapi"  # or "retell"
     vapi_api_key: str = ""
     vapi_assistant_id: str = ""
+    vapi_webhook_secret: str = ""      # verifies the X-Vapi-Secret header on /dialer/webhooks/call-ended
     retell_api_key: str = ""
     retell_agent_id: str = ""
+    retell_webhook_secret: str = ""    # verifies the X-Retell-Signature header on /dialer/webhooks/call-ended
     dialer_window_start_hour: int = 9   # local hour, inclusive
     dialer_window_end_hour: int = 17    # local hour, exclusive
     dialer_timezone: str = "America/New_York"
@@ -91,6 +93,8 @@ class Settings(BaseSettings):
     docusign_private_key_path: str = "data/docusign_private_key.pem"
     docusign_base_url: str = "https://demo.docusign.net/restapi"
     contract_template_id: str = ""
+    pandadoc_webhook_shared_key: str = ""  # verifies PandaDoc's webhook signature
+    docusign_connect_hmac_key: str = ""    # verifies DocuSign Connect's X-DocuSign-Signature-1 header
 
     # --- Notifications (Stripe webhook + Twilio SMS delivery) ---
     stripe_api_key: str = ""

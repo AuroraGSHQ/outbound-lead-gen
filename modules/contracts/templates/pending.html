@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Contracts pending approval</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <h1>Contracts pending approval</h1>
+  {% if items %}
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Contact</th><th>Provider</th><th>Created</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.contact_id }}</td>
+        <td>{{ item.provider }}</td>
+        <td>{{ item.created_at }}</td>
+        <td><a href="/contracts/{{ item.id }}">review</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Nothing waiting on you right now.</p>
+  {% endif %}
+</body>
+</html>

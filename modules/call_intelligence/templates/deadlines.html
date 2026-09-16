@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Open Deadlines</title>
+    <style>
+        body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 2rem; color: #1a1a1a; }
+        h1 { font-size: 1.25rem; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+        th { color: #555; font-weight: 600; }
+        .overdue { color: #b91c1c; font-weight: 600; }
+        .empty { color: #777; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>Open Deadlines</h1>
+    {% if deadlines %}
+    <table>
+        <thead>
+            <tr>
+                <th>Due</th>
+                <th>Description</th>
+                <th>Contact</th>
+                <th>Reminders sent</th>
+                <th>Last reminded</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in deadlines %}
+            <tr>
+                <td class="{{ 'overdue' if d.due_date < today else '' }}">{{ d.due_date }}</td>
+                <td>{{ d.description }}</td>
+                <td>{{ d.contact_name or d.company_name or '—' }}</td>
+                <td>{{ d.reminded_count }}</td>
+                <td>{{ d.last_reminded_at or 'never' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No open deadlines.</p>
+    {% endif %}
+</body>
+</html>

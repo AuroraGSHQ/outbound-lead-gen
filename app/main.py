@@ -28,6 +28,10 @@ from app.models import Lead, LeadStatus, Meeting, Message, MessageStatus
 from app.scheduler import start_scheduler
 from app.services.approvals import approve_and_send, pending_approvals, reject
 from app.services.notify import notify_meeting_booked
+from modules.call_intelligence.router import router as call_intelligence_router
+from modules.contracts.router import router as contracts_router
+from modules.dialer.router import router as dialer_router
+from modules.notifications.router import router as notifications_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,6 +49,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Outbound Lead-Gen Bot", lifespan=lifespan)
+
+# JARVIS modules (dialer, call_intelligence, contracts, notifications) — each
+# is self-contained under modules/<name>/, mounted here as the one shared
+# integration point. See modules/README.md for the router.py/jobs.py contract.
+app.include_router(dialer_router)
+app.include_router(call_intelligence_router)
+app.include_router(contracts_router)
+app.include_router(notifications_router)
 
 
 def get_db():

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Dialer Status</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; margin: 2rem; color: #222; }
+        h1 { font-size: 1.4rem; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+        th { background: #f5f5f5; }
+        .counts span { display: inline-block; margin-right: 1rem; padding: 0.2rem 0.6rem; background: #eef; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Dialer status</h1>
+
+    <h2>Outcomes</h2>
+    <div class="counts">
+        {% for outcome, count in counts_by_outcome.items() %}
+        <span>{{ outcome or "(none)" }}: {{ count }}</span>
+        {% endfor %}
+    </div>
+
+    <h2>Recent AI outbound calls</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th><th>Contact</th><th>Segment</th><th>Outcome</th>
+                <th>External Call ID</th><th>Started</th><th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for call in recent_calls %}
+            <tr>
+                <td>{{ call.id }}</td>
+                <td>{{ call.contact_name or "—" }}</td>
+                <td>{{ call.segment or "—" }}</td>
+                <td>{{ call.outcome }}</td>
+                <td>{{ call.external_call_id }}</td>
+                <td>{{ call.started_at or call.created_at }}</td>
+                <td>{{ call.summary }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

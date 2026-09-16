@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Contract #{{ item.id }}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; max-width: 640px; }
+    dt { font-weight: 600; margin-top: 0.75rem; }
+    pre { background: #f5f5f5; padding: 0.75rem; overflow-x: auto; }
+    form { display: inline-block; margin-right: 0.5rem; margin-top: 1rem; }
+    button { padding: 0.5rem 1rem; cursor: pointer; }
+    .approve { background: #16a34a; color: white; border: none; border-radius: 4px; }
+    .reject { background: #dc2626; color: white; border: none; border-radius: 4px; }
+    input[type=text] { padding: 0.4rem; }
+  </style>
+</head>
+<body>
+  <h1>Contract #{{ item.id }}</h1>
+  <dl>
+    <dt>Status</dt><dd>{{ item.status }}</dd>
+    <dt>Contact</dt><dd>{{ item.contact_id }}</dd>
+    <dt>Provider</dt><dd>{{ item.provider }}</dd>
+    <dt>Template</dt><dd>{{ item.template_id }}</dd>
+    <dt>External document id</dt><dd>{{ item.external_document_id }}</dd>
+    <dt>Filled data</dt><dd><pre>{{ item.filled_data }}</pre></dd>
+  </dl>
+
+  {% if item.status == 'pending_approval' %}
+  <form method="post" action="/contracts/{{ item.id }}/approve">
+    <button class="approve" type="submit">Approve &amp; send</button>
+  </form>
+  <form method="post" action="/contracts/{{ item.id }}/reject">
+    <input type="text" name="reason" placeholder="Rejection reason">
+    <button class="reject" type="submit">Reject</button>
+  </form>
+  {% endif %}
+</body>
+</html>

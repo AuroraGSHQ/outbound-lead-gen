@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Notifications</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #0b0d12; color: #e7e9ee; }
+    h1 { font-size: 1.25rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #262b36; vertical-align: top; }
+    th { color: #9aa4b2; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+    .pill { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75rem; }
+    .pill-ok { background: #16351f; color: #7ee0a1; }
+    .pill-pending { background: #3a2b12; color: #f0b24d; }
+    .body { color: #9aa4b2; max-width: 32rem; }
+    .error { color: #f26d6d; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <h1>Recent notifications</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Type</th><th>Title</th><th>Body</th><th>Status</th><th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in notifications %}
+      <tr>
+        <td>{{ n.id }}</td>
+        <td>{{ n.type }}</td>
+        <td>{{ n.title }}</td>
+        <td class="body">{{ n.body }}</td>
+        <td>
+          {% if n.delivered %}
+            <span class="pill pill-ok">delivered</span>
+          {% else %}
+            <span class="pill pill-pending">pending</span>
+          {% endif %}
+          {% if n.delivery_error %}
+            <div class="error">{{ n.delivery_error }}</div>
+          {% endif %}
+        </td>
+        <td>{{ n.created_at }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No notifications yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
