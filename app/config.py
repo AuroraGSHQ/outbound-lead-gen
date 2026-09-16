@@ -100,6 +100,18 @@ class Settings(BaseSettings):
     stripe_api_key: str = ""
     stripe_webhook_secret: str = ""
 
+    # --- Sync / CRM auto-maintenance (dual-inbox Gmail monitoring + re-enrichment) ---
+    # One registered OAuth app (client id/secret), one refresh token per
+    # inbox — each inbox is authorized separately but shares the same app.
+    # Distinct from GMAIL_* above, which is the file-token-based flow used
+    # to send/poll the single outreach sending inbox.
+    gmail_oauth_client_id: str = ""
+    gmail_oauth_client_secret: str = ""
+    gmail_business_refresh_token: str = ""
+    gmail_personal_refresh_token: str = ""
+    vibe_prospecting_api_key: str = ""
+    sync_stale_prospect_days: int = 60
+
     @property
     def is_autonomous(self) -> bool:
         return self.approval_mode.strip().lower() == "autonomous"

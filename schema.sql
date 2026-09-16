@@ -130,3 +130,76 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE INDEX IF NOT EXISTS idx_notifications_delivered ON notifications(delivered);
 CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+
+-- ---------------------------------------------------------------------
+-- emails: every inbound/outbound message across both watched inboxes
+-- (business + personal), logged by the `sync` module. Matched to a
+-- contact by address when possible; unmatched messages are kept and
+-- flagged instead of dropped, since an unmatched sender is often a new
+-- lead nobody logged yet.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS emails (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contact_id INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
+    inbox TEXT NOT NULL CHECK (inbox IN ('business', 'personal')),
+    direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
+    gmail_message_id TEXT NOT NULL DEFAULT '',
+    gmail_thread_id TEXT NOT NULL DEFAULT '',
+    from_address TEXT NOT NULL DEFAULT '',
+    to_address TEXT NOT NULL DEFAULT '',
+    subject TEXT NOT NULL DEFAULT '',
+    snippet TEXT NOT NULL DEFAULT '',
+    flagged INTEGER NOT NULL DEFAULT 0 CHECK (flagged IN (0, 1)),   -- no matching contact -> possible new lead
+    needs_reply INTEGER NOT NULL DEFAULT 0 CHECK (needs_reply IN (0, 1)),
+    notified INTEGER NOT NULL DEFAULT 0 CHECK (notified IN (0, 1)), -- missed_message notification already fired
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_emails_contact ON emails(contact_id);
+CREATE INDEX IF NOT EXISTS idx_emails_gmail_message_id ON emails(gmail_message_id);
+CREATE INDEX IF NOT EXISTS idx_emails_flagged ON emails(flagged);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_emails_inbox_message_unique ON emails(inbox, gmail_message_id);
+
+-- ---------------------------------------------------------------------
+-- Reconciliation triggers (the `sync` module's reason to exist as a
+-- schema concept, not just application code): these fire on ANY insert/
+-- update to call_logs or contracts, regardless of which module wrote the
+-- row, so a contact's segment/last_contacted_at can never silently drift
+-- out of sync with what actually happened on a call or a signature.
+-- ---------------------------------------------------------------------
+CREATE TRIGGER IF NOT EXISTS trg_call_logs_touch_contact
+AFTER INSERT ON call_logs
+WHEN NEW.contact_id IS NOT NULL
+BEGIN
+    UPDATE contacts
+    SET last_contacted_at = COALESCE(NEW.started_at, NEW.created_at),
+        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = NEW.contact_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_call_logs_outcome_closed
+AFTER UPDATE OF outcome ON call_logs
+WHEN NEW.contact_id IS NOT NULL AND NEW.outcome = 'closed' AND OLD.outcome IS NOT NEW.outcome
+BEGIN
+    UPDATE contacts
+    SET segment = 'current_client', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = NEW.contact_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_call_logs_outcome_callback
+AFTER UPDATE OF outcome ON call_logs
+WHEN NEW.contact_id IS NOT NULL AND NEW.outcome = 'callback_requested' AND OLD.outcome IS NOT NEW.outcome
+BEGIN
+    UPDATE contacts
+    SET segment = 'callback_requested', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = NEW.contact_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_contracts_signed_marks_current_client
+AFTER UPDATE OF status ON contracts
+WHEN NEW.contact_id IS NOT NULL AND NEW.status = 'signed' AND OLD.status IS NOT NEW.status
+BEGIN
+    UPDATE contacts
+    SET segment = 'current_client', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    WHERE id = NEW.contact_id;
+END;

@@ -21,6 +21,19 @@ entered there, not hardcoded.
 | `call_intelligence` | Summarizes any call (AI dialer, Zoom, or your manual phone calls), extracts deadlines, nags you when they're overdue | Anthropic API, Zoom API, Twilio recording |
 | `contracts` | Auto-fills your uploaded template on close, holds for your approval, sends on your yes | PandaDoc or DocuSign API |
 | `notifications` | One channel for everything that needs your attention: payments, overdue deadlines, contracts awaiting approval, flagged messages | Stripe webhook, Twilio SMS |
+| `sync` | Keeps contacts/CRM state honest automatically: dual-inbox email logging + lead-matching, and stale-prospect re-enrichment | Gmail API (2 inboxes), Vibe Prospecting (Explorium AgentSource API) |
+
+### A note specific to `sync`: most of its "triggers" are DB triggers, not Python
+
+`schema.sql` already defines `AFTER INSERT/UPDATE` triggers on `call_logs`
+and `contracts` (`trg_call_logs_touch_contact`, `trg_call_logs_outcome_closed`,
+`trg_call_logs_outcome_callback`, `trg_contracts_signed_marks_current_client`)
+that keep `contacts.last_contacted_at`/`contacts.segment` correct the moment
+any module writes those tables — no polling, no cross-module coupling, fires
+regardless of which module (or future module) wrote the row. `sync` does not
+need to reimplement that reconciliation in application code; its own job is
+the two things schema-level triggers can't do: talking to Gmail (emails
+table) and talking to Vibe Prospecting (re-enrichment).
 
 ## Build order, honestly
 
