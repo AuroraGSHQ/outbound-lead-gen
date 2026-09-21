@@ -218,7 +218,7 @@ class ClaudeDrafter:
             '      "title": "short imperative title",\n'
             '      "description": "1-2 sentences",\n'
             '      "category": one of ["intake_followup","outreach","scanner_verify","referral","ads","content","admin"],\n'
-            '      "handler": one of ["schedule_90day_review_reminder","draft_proposal_email","run_scanner_scan","draft_welcome_email","add_to_referral_program","human_review"],\n'
+            '      "handler": one of ["schedule_90day_review_reminder","draft_proposal_email","draft_proposal_document","run_scanner_scan","draft_welcome_email","add_to_referral_program","human_review"],\n'
             '      "auto_executable": true or false,\n'
             '      "payload_hint": "one sentence on what the handler needs to know"\n'
             "    }\n"
@@ -327,6 +327,106 @@ class ClaudeDrafter:
         )
         data = self._complete_json(system, user)
         return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def draft_case_study(self, client: dict[str, Any], metrics_summary: str, profile: BusinessProfile) -> str:
+        """Nike: a case-study draft from one client's real before/after
+        numbers — manual §1's top item in the hierarchy of persuasion."""
+        system = (
+            "Write a short case study (under 350 words, markdown) for one client: "
+            "named business, specific before/after numbers, what changed and why. "
+            "No hype language. If a number is missing, say so rather than inventing "
+            "one. Respond with markdown only, no JSON, no code fence."
+        )
+        user = (
+            f"Client: {client.get('company_name')}. Tier: {client.get('tier', 'n/a')}.\n"
+            f"Metrics: {metrics_summary}\n\nPublisher: {profile.business_name}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=768, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_proposal_document(
+        self, client: dict[str, Any], tier: str, context: str, profile: BusinessProfile
+    ) -> str:
+        """Dike: a structured proposal — scope, price, the booked-job-floor
+        guarantee (manual §2's risk-reversal layer) — from the intake plan."""
+        system = (
+            "Write a short client proposal (under 400 words, markdown) with these "
+            "sections: Scope, Price, Guarantee, Next steps. Plain language, no "
+            "generic agency phrases. State the guarantee plainly with its "
+            "conditions. Respond with markdown only, no JSON, no code fence."
+        )
+        user = (
+            f"Client: {client.get('company_name')}, contact {client.get('contact_name')}.\n"
+            f"Recommended tier: {tier}\nContext from intake: {context}\n\n"
+            f"My business: {profile.business_name}. {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=768, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_review_response(self, review_text: str, rating: str, profile: BusinessProfile) -> str:
+        """Echo: a public reply to a review, ready to paste into Google/
+        Facebook by hand (no review-platform API is wired up)."""
+        system = (
+            "Write a short public reply to this customer review, in the voice of "
+            "the business owner. Thank them specifically (reference something real "
+            "in their review), address any concern plainly, no corporate tone. "
+            "Under 80 words. Respond with plain text only, no JSON, no quotes."
+        )
+        user = f"Rating: {rating}\nReview: {review_text}\n\nBusiness: {profile.business_name}"
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=256, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text").strip()
+
+    def draft_competitor_analysis(
+        self, competitor_name: str, observed_text: str, note_type: str, profile: BusinessProfile
+    ) -> str:
+        """Eris / Astraea: run a logged competitor observation through the
+        manual's own differentiation test ('cover your logo')."""
+        system = (
+            "You're checking a competitor's ad or pricing against the 'cover your "
+            "logo' test: could a competitor swap their name onto our own material "
+            "without changing a word? In under 120 words, note what's actually "
+            "distinctive about what we observed, and one concrete way our own "
+            "positioning should differ or hold firm. No hedging, no filler. "
+            "Respond with plain text only."
+        )
+        user = (
+            f"Competitor: {competitor_name}\nType: {note_type}\nObserved: {observed_text}\n\n"
+            f"Our business: {profile.business_name}. {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=384, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text").strip()
+
+    def draft_meeting_brief(
+        self, lead: dict[str, Any], site_findings: str, profile: BusinessProfile
+    ) -> str:
+        """Metis: a one-page pre-call brief so whoever's on the discovery
+        call walks in already knowing the shape of the business."""
+        system = (
+            "Write a one-page pre-call brief (under 300 words, markdown) for "
+            "someone about to have a discovery call with this prospect: likely "
+            "pain points, a specific observation to open with, and two questions "
+            "worth asking. Grounded only in what's given — say 'unknown' rather "
+            "than guessing specifics you don't have. Respond with markdown only, "
+            "no JSON, no code fence."
+        )
+        user = (
+            f"Prospect: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n"
+            f"What we found on their site: {site_findings}\n\n"
+            f"My business: {profile.business_name}. {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=512, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
 
     def draft_followup(self, lead: dict[str, Any], profile: BusinessProfile) -> dict[str, str]:
         system = (

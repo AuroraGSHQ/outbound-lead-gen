@@ -150,6 +150,19 @@ def _handle_run_scanner_scan(session: Session, settings: Settings, item: ActionI
     return f"Scan complete for {domain} — see /scanner/{target.id}."
 
 
+def _handle_draft_proposal_document(session: Session, settings: Settings, item: ActionItem) -> str:
+    client_id = item.payload.get("client_id") or item.client_id
+    if not client_id:
+        return "No client attached to this action item — skipped."
+    client = session.get(Client, client_id)
+    if client is None:
+        return "Client not found — skipped."
+    from app.services import proposals
+
+    markdown = proposals.build_proposal_markdown(session, settings, client)
+    return f"Proposal draft:\n\n{markdown}"
+
+
 def _handle_add_to_referral_program(session: Session, settings: Settings, item: ActionItem) -> str:
     client_id = item.payload.get("client_id") or item.client_id
     client = session.get(Client, client_id) if client_id else None
@@ -164,6 +177,7 @@ _HANDLERS: dict[str, Callable[[Session, Settings, ActionItem], str]] = {
     "schedule_90day_review_reminder": _handle_schedule_90day_review_reminder,
     "draft_welcome_email": _handle_draft_welcome_email,
     "draft_proposal_email": _handle_draft_proposal_email,
+    "draft_proposal_document": _handle_draft_proposal_document,
     "run_scanner_scan": _handle_run_scanner_scan,
     "add_to_referral_program": _handle_add_to_referral_program,
     # "human_review" is intentionally absent — it always requires a person.

@@ -6,7 +6,7 @@
   <button type="submit" class="secondary">Search</button>
 </form>
 <table>
-  <tr><th>Company</th><th>Contact</th><th>Status</th><th>Source</th><th></th></tr>
+  <tr><th>Company</th><th>Contact</th><th>Status</th><th>Source</th><th colspan="2"></th></tr>
   {% for lead in leads %}
   <tr>
     <td>{{ lead.company_name }}</td>
@@ -14,6 +14,11 @@
     <td>{{ lead.status }}</td>
     <td>{{ lead.source }}</td>
     <td><a href="/intake/new?lead_id={{ lead.id }}">Start intake →</a></td>
+    <td>
+      <form method="post" action="/leads/{{ lead.id }}/recon">
+        <button type="submit" class="secondary">Metis: prep brief</button>
+      </form>
+    </td>
   </tr>
   {% endfor %}
 </table>

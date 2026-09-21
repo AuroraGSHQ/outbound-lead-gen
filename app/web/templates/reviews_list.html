@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Reviews — Echo</h1>
+<p class="meta">No review-platform API is wired in. Echo nudges for a review 60 days into a client relationship (see the Actions board), and drafts a reply for any review you paste in here — you post it by hand.</p>
+
+<div class="card" style="max-width: 520px;">
+  <form method="post" action="/reviews/log">
+    <p><label>Client (optional)<br>
+      <select name="client_id">
+        <option value="0">— not tied to a specific client —</option>
+        {% for c in clients %}<option value="{{ c.id }}">{{ c.company_name }}</option>{% endfor %}
+      </select>
+    </label></p>
+    <p><label>Rating<br>
+      <select name="rating">
+        {% for r in ["5","4","3","2","1"] %}<option value="{{ r }}">{{ r }} stars</option>{% endfor %}
+      </select>
+    </label></p>
+    <p><label>Review text<br><textarea name="review_text" required></textarea></label></p>
+    <button type="submit">Draft a reply</button>
+  </form>
+</div>
+
+{% for item in items %}
+<div class="card">
+  <span class="badge {{ 'done' if item.status == 'done' else 'open' }}">{{ item.status }}</span>
+  <p><strong>{{ item.title }}</strong></p>
+  <p class="meta">{{ item.description }}</p>
+  {% if item.result %}<p><em>{{ item.result }}</em></p>{% endif %}
+</div>
+{% else %}
+<p>No review activity logged yet.</p>
+{% endfor %}
+{% endblock %}

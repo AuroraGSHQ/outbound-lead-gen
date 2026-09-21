@@ -98,27 +98,66 @@ prompt but a phone needs a reachable HTTPS URL.
 
 ## The AI team
 
-Eight agents, each backed by a real scheduled job (`app/scheduler.py`) — see
-them and their cadence on the **Team** page once the app is running:
+Twenty-three agents, named after Greek gods, each backed by a real scheduled
+job (`app/scheduler.py`) or run on-demand — see them, their cadence, and
+their last-run status on the **Team** page once the app is running. Every
+agent that could produce something client-facing (an email, an ad, outreach
+copy) queues it in **Approvals** or the **Actions** board rather than
+sending/publishing it — see Architecture below.
+
+**Each one has an on/off switch.** Owners can turn any agent off from the
+Team page — its scheduled job skips itself (and logs that it did) until
+turned back on. Nothing it already produced gets deleted.
 
 | Agent | Does | Manual section |
 |---|---|---|
-| **Scout** | Sources leads from Apollo against your ICP daily; Vibe Prospecting sourcing is a person-run request/import loop (see below) | — |
-| **Scanner** | Passive checks on prospect sites (speed, mobile, tracking, click-to-call); flags what a human still has to verify | §8 |
-| **Scribe** | Drafts first-touch/follow-up emails, polls replies, classifies intent | §9 |
-| **Concierge** | Turns discovery-call notes into a client record + action plan | new |
-| **Connector** | Watches for 90-day reviews and drafts the referral ask | §11 |
-| **Promoter** | Generates the monthly ad campaign brief from the budget calendar | §4/§6/§14 |
-| **Analyst** | Computes the six KPIs daily; drafts the quarterly benchmark extract | §12/§15 |
-| **Courier** | Daily digest + immediate pings (meeting booked, etc.) | — |
+| **Hermes** | Sources leads from Apollo against your ICP daily; Vibe Prospecting sourcing is a person-run request/import loop (see below) | — |
+| **Momus** | Passive checks on prospect sites (speed, mobile, tracking, click-to-call); flags what a human still has to verify | §8 |
+| **Peitho** | Drafts first-touch/follow-up emails, polls replies, classifies intent | §9 |
+| **Themis** | Turns discovery-call notes into a client record + action plan | new |
+| **Philotes** | Watches for 90-day reviews and drafts the referral ask | §11 |
+| **Pheme** | Generates the monthly ad campaign brief from the budget calendar | §4/§6/§14 |
+| **Athena** | Computes the six KPIs daily; drafts the quarterly benchmark extract | §12/§15 |
+| **Iris** | Daily digest + immediate pings (meeting booked, etc.) | — |
+| **Demeter** | Plants the onboarding checklist the moment a client goes active | new |
+| **Plutus** | Flags monthly invoices due and escalates unconfirmed ones | new |
+| **Echo** | Nudges for reviews at 60 days; drafts a reply for any review you log | new |
+| **Nike** | Drafts a case study once a client has 90 days of real results | §1 |
+| **Metis** | On-demand pre-call brief on a prospect, before a discovery call | new |
+| **Dike** | Turns an intake recommendation into a ready-to-send proposal | new |
+| **Argus** | Watches send-volume trend and Gmail token health | new |
+| **Eris** | Logs a competitor ad, checks it against Aurora's differentiation test | new |
+| **Persephone** | Six weeks after a decline, drafts a low-pressure referral ask | §11 |
+| **Aletheia** | Runs Momus's own checks against Aurora's own site | new |
+| **Chloris** | Flags ad campaigns running past 3-4 weeks for a creative refresh | §6 |
+| **Nemesis** | Flags an active client gone quiet for 60+ days | new |
+| **Astraea** | Logs a competitor's pricing, checks it against Aurora's own | new |
+| **Chronos** | A once-a-month ops rollup — what's aging, by category | new |
+| **Hephaestus** | Checks config, dependency drift, and every agent's last run; alerts immediately when something's actually broken | new |
 
-Every agent that could produce something client-facing (an email, an ad,
-outreach copy) queues it in **Approvals** or the **Actions** board rather
-than sending/publishing it — see Architecture below.
+### How 23 agents avoid stepping on each other
+
+Four rules, enforced in the code rather than just documented:
+
+1. **One inbox, one gate.** Every send or publish funnels through Approvals
+   (`app/services/approvals.py::send_message`) — no agent gets its own
+   private send pipe.
+2. **One owner per field.** Each status (`Lead.status`, `Client.status`,
+   `ScanResult.verified`, ...) has exactly one agent or human allowed to
+   write it; everyone else reads or flags, never changes it. Example:
+   Nemesis (churn) only ever raises a flag — Plutus (billing) or a person
+   is still the one who moves `Client.status` to `paused`/`churned`.
+3. **Distinct triggers.** Agents watching similar things key off different
+   conditions and time windows, so two can never fire on the same event —
+   Persephone's 6-week win-back can't double-ask a client Philotes's 90-day
+   review already asked.
+4. **Read-only by default.** Anything that's "just watching" (Eris, Astraea,
+   Chronos, Hephaestus) never writes to a core Lead/Client/Message table —
+   it only ever creates its own `ActionItem`.
 
 ## Sourcing with Vibe Prospecting
 
-Apollo sourcing (Scout) runs on its own every morning, no one has to touch
+Apollo sourcing (Hermes) runs on its own every morning, no one has to touch
 it. Vibe Prospecting (Explorium data — intent topics, tech stack, job-change
 events, richer than Apollo's filters) can't run that way: its own rules
 require a human to see the cost in credits and explicitly confirm before
@@ -145,15 +184,19 @@ config/icp.yaml                 → who counts as a "best client" and how they'r
 config/ads_budget_calendar.yaml → the quarterly ad spend/allocation plan (manual §14)
 config/ad_targeting.yaml        → audience segments + creative angles (manual §5/§6)
 app/integrations/               → thin clients: Apollo, Gmail, Calendly, Claude, site checks, ad platforms
-app/services/                   → the agents: sourcing, outreach, conversation, approvals,
-                                   intake, actions, scanner, referrals, ads, metrics, content, notify
+app/services/                   → the 23 agents: sourcing, outreach, conversation, approvals,
+                                   intake, actions, scanner, referrals, ads, metrics, content, notify,
+                                   onboarding, billing, reviews, case_studies, recon, proposals,
+                                   deliverability, competitor_watch, winback, self_audit,
+                                   creative_refresh, churn_watch, ops_rollup, system_health,
+                                   agent_toggles
 app/web/auth.py                 → session login + role-based access
 app/scheduler.py                → cron-style jobs that run every agent, plus the team roster
 app/main.py                     → the whole dashboard (FastAPI) + Calendly webhook
 ```
 
-Every outbound send — first touch, reply, follow-up, or one drafted by the
-Concierge/Scanner agents — funnels through
+Every outbound send — first touch, reply, follow-up, or one drafted by any
+other agent (Themis, Momus, Persephone...) — funnels through
 `app/services/approvals.py::send_message`, which is the one place that talks
 to Gmail's send API and updates lead/message state. That's also the one spot
 to look if you ever need to audit "what did this actually send."

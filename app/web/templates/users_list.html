@@ -2,13 +2,18 @@
 {% block content %}
 <h1>Team accounts</h1>
 <table>
-  <tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th>Last login</th></tr>
+  <tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th>System alerts</th><th>Last login</th></tr>
   {% for t in team %}
   <tr>
     <td>{{ t.name }}</td>
     <td>{{ t.email }}</td>
     <td>{{ t.role }}</td>
     <td>{{ "yes" if t.active else "no" }}</td>
+    <td>
+      <form method="post" action="/users/{{ t.id }}/notify-toggle">
+        <button type="submit" class="secondary">{{ "on — turn off" if t.notify_system_alerts else "off — turn on" }}</button>
+      </form>
+    </td>
     <td>{{ t.last_login_at.strftime("%Y-%m-%d %H:%M") if t.last_login_at else "never" }}</td>
   </tr>
   {% endfor %}
@@ -25,6 +30,7 @@
         {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
       </select>
     </label></p>
+    <p><label><input type="checkbox" name="notify_system_alerts" value="1"> Send this person Hephaestus's system-health alerts</label></p>
     <button type="submit">Create account</button>
   </form>
 </div>

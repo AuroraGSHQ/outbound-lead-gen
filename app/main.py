@@ -30,6 +30,7 @@ from app.models import (
     AdCampaign,
     Client,
     ClientStatus,
+    CompetitorNoteType,
     IntakeCall,
     Lead,
     LeadStatus,
@@ -41,15 +42,21 @@ from app.models import (
     User,
     UserRole,
 )
-from app.scheduler import AGENT_JOBS, get_scheduler, start_scheduler
+from app.scheduler import AGENT_JOBS, JOB_FUNCTIONS, get_scheduler, start_scheduler
 from app.services import (
     actions,
     ads,
+    agent_toggles,
+    competitor_watch,
     content,
     intake,
     lead_import,
     metrics,
+    onboarding,
+    proposals,
+    recon,
     referrals,
+    reviews,
     scanner,
     sourcing_requests,
     users,
@@ -172,6 +179,9 @@ def dashboard(request: Request, db: Session = Depends(get_db), user: User = Depe
         "clients_active": db.query(Client).filter(Client.status == ClientStatus.ACTIVE.value).count(),
         "unverified_scans": db.query(ScanResult).filter(ScanResult.verified.is_(False)).count(),
         "open_sourcing_requests": db.query(SourcingRequest).filter(SourcingRequest.status == "requested").count(),
+        "system_alerts": db.query(ActionItem)
+        .filter(ActionItem.category == "system", ActionItem.status != "done")
+        .count(),
     }
     snapshot = metrics.latest_snapshot(db)
     return templates.TemplateResponse(
@@ -247,10 +257,25 @@ def create_user_route(
     email: str = Form(...),
     password: str = Form(...),
     role: str = Form(UserRole.OPS.value),
+    notify_system_alerts: str = Form(""),
     db: Session = Depends(get_db),
     user: User = Depends(require_roles()),
 ):
-    users.create_user(db, name=name, email=email, password=password, role=role)
+    new_user = users.create_user(db, name=name, email=email, password=password, role=role)
+    new_user.notify_system_alerts = bool(notify_system_alerts)
+    db.commit()
+    return RedirectResponse("/users", status_code=303)
+
+
+@app.post("/users/{user_id}/notify-toggle")
+def toggle_user_notify(
+    user_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles())
+):
+    target = db.get(User, user_id)
+    if target is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    target.notify_system_alerts = not target.notify_system_alerts
+    db.commit()
     return RedirectResponse("/users", status_code=303)
 
 
@@ -267,7 +292,18 @@ def list_leads(request: Request, q: str = "", db: Session = Depends(get_db), use
     return templates.TemplateResponse("leads_list.html", {"request": request, "leads": leads, "q": q, "user": user})
 
 
-# --- Sourcing requests (Scout / Vibe Prospecting) -----------------------------
+@app.post("/leads/{lead_id}/recon")
+def run_recon(
+    lead_id: int,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales")),
+):
+    recon.prep_meeting_brief(db, settings, lead_id)
+    return RedirectResponse("/actions", status_code=303)
+
+
+# --- Sourcing requests (Hermes / Vibe Prospecting) -----------------------------
 
 
 @app.get("/sourcing", response_class=HTMLResponse)
@@ -529,13 +565,27 @@ def update_client(
     client = db.get(Client, client_id)
     if client is None:
         raise HTTPException(status_code=404, detail="Not found")
+    was_active = client.status == ClientStatus.ACTIVE.value
     client.status = status
     client.tier = tier
     client.monthly_fee = monthly_fee
     if start_date:
         client.start_date = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
     db.commit()
+    if status == ClientStatus.ACTIVE.value and not was_active:
+        onboarding.create_onboarding_checklist(db, client)
     return RedirectResponse(f"/clients/{client_id}", status_code=303)
+
+
+@app.post("/clients/{client_id}/proposal")
+def generate_client_proposal(
+    client_id: int,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales")),
+):
+    proposals.generate_proposal(db, settings, client_id)
+    return RedirectResponse("/actions", status_code=303)
 
 
 # --- Scanner -----------------------------------------------------------------
@@ -686,6 +736,69 @@ def generate_content(
     return RedirectResponse("/actions", status_code=303)
 
 
+# --- Reviews (Echo) -------------------------------------------------------------
+
+
+@app.get("/reviews", response_class=HTMLResponse)
+def list_reviews(request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("sales", "ops"))):
+    items = (
+        db.query(ActionItem)
+        .filter(ActionItem.category == "reviews")
+        .order_by(ActionItem.created_at.desc())
+        .all()
+    )
+    clients = db.query(Client).order_by(Client.company_name.asc()).all()
+    return templates.TemplateResponse("reviews_list.html", {"request": request, "items": items, "clients": clients, "user": user})
+
+
+@app.post("/reviews/log")
+def log_review(
+    client_id: int = Form(0),
+    review_text: str = Form(...),
+    rating: str = Form("5"),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales", "ops")),
+):
+    reviews.log_review_and_draft_response(
+        db, settings, client_id=client_id or None, review_text=review_text, rating=rating
+    )
+    return RedirectResponse("/reviews", status_code=303)
+
+
+# --- Competitor watch (Eris / Astraea) -------------------------------------------
+
+
+@app.get("/competitors", response_class=HTMLResponse)
+def list_competitors(request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("marketing", "sales"))):
+    return templates.TemplateResponse(
+        "competitors_list.html",
+        {"request": request, "notes": competitor_watch.list_notes(db), "user": user, "note_types": [t.value for t in CompetitorNoteType]},
+    )
+
+
+@app.post("/competitors/new")
+def log_competitor_note(
+    competitor_name: str = Form(...),
+    note_type: str = Form(CompetitorNoteType.AD.value),
+    source_url: str = Form(""),
+    observed_text: str = Form(...),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("marketing", "sales")),
+):
+    competitor_watch.log_note(
+        db,
+        settings,
+        competitor_name=competitor_name,
+        note_type=note_type,
+        source_url=source_url,
+        observed_text=observed_text,
+        logged_by_user_id=user.id,
+    )
+    return RedirectResponse("/competitors", status_code=303)
+
+
 # --- Metrics + Team ------------------------------------------------------------
 
 
@@ -699,14 +812,40 @@ def view_metrics(request: Request, db: Session = Depends(get_db), user: User = D
 @app.get("/team", response_class=HTMLResponse)
 def view_team(request: Request, db: Session = Depends(get_db), user: User = Depends(require_login)):
     live_scheduler = get_scheduler()
+    toggle_states = agent_toggles.states_for(db, [a["key"] for a in AGENT_JOBS])
     agents = []
     for agent in AGENT_JOBS:
         next_run = None
         if agent["job_id"] and live_scheduler is not None:
             job = live_scheduler.get_job(agent["job_id"])
             next_run = job.next_run_time if job else None
-        agents.append({**agent, "next_run": next_run})
+        agents.append({**agent, "next_run": next_run, "enabled": toggle_states[agent["key"]]})
     return templates.TemplateResponse("team.html", {"request": request, "agents": agents, "user": user})
+
+
+@app.post("/team/{key}/toggle")
+def toggle_agent(
+    key: str,
+    enabled: str = Form(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles()),
+):
+    agent_toggles.set_enabled(db, key, enabled == "on", updated_by_user_id=user.id)
+    return RedirectResponse("/team", status_code=303)
+
+
+@app.post("/team/{key}/run-now")
+def run_agent_now(
+    key: str, db: Session = Depends(get_db), user: User = Depends(require_roles())
+):
+    agent = next((a for a in AGENT_JOBS if a["key"] == key), None)
+    if agent is None or not agent["job_id"]:
+        raise HTTPException(status_code=404, detail="This agent has no scheduled job to run.")
+    job_fn = JOB_FUNCTIONS.get(agent["job_id"])
+    if job_fn is None:
+        raise HTTPException(status_code=404, detail="No job function registered for this agent.")
+    job_fn()
+    return RedirectResponse("/team", status_code=303)
 
 
 # --- Calendly webhook (no auth — Calendly calls this directly) ----------------

@@ -154,6 +154,10 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(50), default=UserRole.OPS.value)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Hephaestus (system health) sends an immediate alert to every owner
+    # plus anyone with this flag on, rather than waiting for the daily
+    # digest — see services/system_health.py.
+    notify_system_alerts: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -219,6 +223,12 @@ class ActionCategory(str, enum.Enum):
     ADS = "ads"
     CONTENT = "content"
     ADMIN = "admin"
+    ONBOARDING = "onboarding"
+    BILLING = "billing"
+    REVIEWS = "reviews"
+    COMPETITOR = "competitor"
+    CHURN = "churn"
+    SYSTEM = "system"
 
 
 class ActionStatus(str, enum.Enum):
@@ -386,6 +396,70 @@ class SourcingRequest(Base):
     fulfilled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     requested_by: Mapped["User | None"] = relationship()
+
+
+class AgentToggle(Base):
+    """The on/off switch for a named agent (matches an AGENT_JOBS `key` in
+    app/scheduler.py). Absence of a row means "on" — see
+    services/agent_toggles.py::is_enabled — so newly added agents default
+    to enabled unless explicitly seeded off."""
+
+    __tablename__ = "agent_toggles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    key: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
+
+
+class JobRunStatus(str, enum.Enum):
+    OK = "ok"
+    ERROR = "error"
+    SKIPPED_DISABLED = "skipped_disabled"
+
+
+class JobRun(Base):
+    """One execution record per scheduled job. Written by
+    scheduler._run_safely on every run (not just failures), so Hephaestus
+    (services/system_health.py) can tell a job that's failing from one
+    that's simply gone quiet, and /team can show real last-run status
+    instead of only "next run"."""
+
+    __tablename__ = "job_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_key: Mapped[str] = mapped_column(String(50), index=True)
+    status: Mapped[str] = mapped_column(String(20), default=JobRunStatus.OK.value)
+    message: Mapped[str] = mapped_column(Text, default="")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CompetitorNoteType(str, enum.Enum):
+    AD = "ad"
+    PRICING = "pricing"
+
+
+class CompetitorNote(Base):
+    """A manually-logged observation about a competitor — an ad, a pricing
+    page, a positioning line. Eris (competitor watch) and Astraea (pricing
+    benchmark) share this table, distinguished by `note_type`; there's no
+    ad-transparency or scraping API wired in, on purpose — see
+    services/competitor_watch.py."""
+
+    __tablename__ = "competitor_notes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    competitor_name: Mapped[str] = mapped_column(String(255))
+    note_type: Mapped[str] = mapped_column(String(20), default=CompetitorNoteType.AD.value)
+    source_url: Mapped[str] = mapped_column(String(500), default="")
+    observed_text: Mapped[str] = mapped_column(Text, default="")
+    analysis: Mapped[str] = mapped_column(Text, default="")
+    logged_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
 class MetricSnapshot(Base):

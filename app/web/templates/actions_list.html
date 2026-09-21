@@ -12,7 +12,7 @@
   </select>
   <select name="category" onchange="this.form.submit()">
     <option value="" {{ "selected" if not category }}>All categories</option>
-    {% for c in ["intake_followup","outreach","scanner_verify","referral","ads","content","admin"] %}
+    {% for c in ["intake_followup","outreach","scanner_verify","referral","ads","content","admin","onboarding","billing","reviews","competitor","churn","system"] %}
     <option value="{{ c }}" {{ "selected" if category == c }}>{{ c }}</option>
     {% endfor %}
   </select>

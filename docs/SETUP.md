@@ -134,7 +134,24 @@ If you've already completed both:
 Either way, campaigns should always be created **paused** — a person flips
 them live, the same draft-and-approve principle as every send in this app.
 
-## 11. Vibe Prospecting sourcing (person-run, by design)
+## 11. Turning agents on/off, and system-health alerts
+
+Every agent on the **Team** page has an on/off switch (owner-only) — flip
+one off and its scheduled job skips itself (logged, not silently dropped)
+until you turn it back on. Nothing it already produced gets deleted.
+
+Two settings feed the newer agents:
+
+- `OWN_DOMAIN` (optional) — Aletheia's self-audit target. Set it to
+  Aurora's own site and Aletheia runs the same passive checks Momus runs on
+  prospects, against you. Leave it blank and Aletheia has nothing to check.
+- **System alerts** — Hephaestus (system health) emails immediately, not on
+  the daily digest, when configuration is missing, a dependency has
+  drifted from `requirements.txt`, or another agent's last run failed.
+  Recipients are every `owner`-role account plus anyone with the "system
+  alerts" flag turned on from the Users page ("whoever else I allow").
+
+## 12. Vibe Prospecting sourcing (person-run, by design)
 
 Vibe Prospecting/Explorium has no portable API key to configure — it's
 accessed through a Claude MCP connector, session-scoped, and its own rules

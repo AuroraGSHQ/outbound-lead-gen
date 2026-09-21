@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     google_ads_developer_token: str = ""
     meta_access_token: str = ""
 
+    # Aletheia (self-audit) — Aurora's own domain, checked with the same
+    # passive checks Momus (scanner) runs on prospects. Blank = skipped.
+    own_domain: str = ""
+
     # Gmail
     gmail_sender_email: str = ""
     gmail_credentials_path: str = "data/credentials.json"

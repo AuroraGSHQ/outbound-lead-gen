@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.integrations import gmail
-from app.models import ActionItem, DigestState, Lead, LeadStatus, Meeting, Message, MessageStatus
+from app.models import ActionItem, DigestState, Lead, LeadStatus, Meeting, Message, MessageStatus, User
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,27 @@ def _send_owner_email(settings: Settings, subject: str, body: str) -> None:
 
 def notify_owner_now(settings: Settings, subject: str, body: str) -> None:
     _send_owner_email(settings, subject, body)
+
+
+def notify_system_alert(session: Session, settings: Settings, subject: str, body: str) -> None:
+    """Hephaestus's immediate-alert path — not the daily digest. Recipients:
+    every `owner`-role user plus anyone who opted into
+    User.notify_system_alerts, deduped, in one send."""
+    recipients = {
+        u.email
+        for u in session.query(User).filter(User.active.is_(True)).all()
+        if u.role == "owner" or u.notify_system_alerts
+    }
+    if settings.owner_email:
+        recipients.add(settings.owner_email)
+    if not recipients:
+        logger.warning("No system-alert recipients configured; skipping: %s", subject)
+        return
+    if not settings.gmail_sender_email:
+        logger.warning("GMAIL_SENDER_EMAIL not set; skipping system alert: %s", subject)
+        return
+    service = gmail.build_service(settings.gmail_token_path)
+    gmail.send_email(service, sender=settings.gmail_sender_email, to=", ".join(sorted(recipients)), subject=subject, body=body)
 
 
 def notify_meeting_booked(settings: Settings, lead: Lead, meeting: Meeting) -> None:
