@@ -133,7 +133,7 @@ class DigestState(Base):
 
 
 # ---------------------------------------------------------------------------
-# Aurora Growth OS: agents, users, and the client-lifecycle layer on top of
+# Olympus: agents, users, and the client-lifecycle layer on top of
 # the outbound engine above.
 # ---------------------------------------------------------------------------
 

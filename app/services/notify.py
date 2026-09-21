@@ -121,7 +121,7 @@ def send_owner_digest(session: Session, settings: Settings) -> dict[str, int]:
         logger.info("Nothing new since last digest; skipping owner email.")
         return stats
 
-    lines = ["Your Aurora Growth OS team has updates:\n"]
+    lines = ["Your Olympus team has updates:\n"]
     if pending:
         lines.append(f"📝 {len(pending)} draft(s) waiting on your approval in the review UI.")
     if new_hot_leads:
@@ -145,7 +145,7 @@ def send_owner_digest(session: Session, settings: Settings) -> dict[str, int]:
     if open_action_items:
         lines.append(f"\n✅ {len(open_action_items)} open action item(s) total on the /actions board.")
 
-    _send_owner_email(settings, "Aurora Growth OS: daily update", "\n".join(lines))
+    _send_owner_email(settings, "Olympus: daily update", "\n".join(lines))
     state.last_sent_at = datetime.now(timezone.utc)
     session.commit()
     return stats

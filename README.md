@@ -1,4 +1,4 @@
-# Aurora Growth OS
+# Olympus
 
 A small team's operations platform, built to run a home-services growth
 agency (or the business behind it) with about ten people instead of fifty.
@@ -90,7 +90,7 @@ The dashboard is a installable web app (PWA) — no app-store account needed:
   Share → "Add to Home Screen" (iOS Safari) or the browser menu → "Install
   app" (Android Chrome). It launches full-screen with its own icon.
 - **Desktop (Chrome/Edge):** an install icon appears in the address bar, or
-  use the browser menu → "Install Aurora Growth OS."
+  use the browser menu → "Install Olympus."
 
 This requires the app to be served over HTTPS from a real domain (see
 Deployment in docs/SETUP.md) — `localhost` works for testing the install

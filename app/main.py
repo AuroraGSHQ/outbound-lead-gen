@@ -94,7 +94,7 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown(wait=False)
 
 
-app = FastAPI(title="Aurora Growth OS", lifespan=lifespan)
+app = FastAPI(title="Olympus", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 
 

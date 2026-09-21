@@ -38,5 +38,5 @@ def send_monthly_rollup(session: Session, settings) -> dict[str, int]:
         for item in sorted(overdue, key=lambda i: i.created_at)[:10]:
             lines.append(f"  - [{item.category}] {item.title} (opened {item.created_at.date().isoformat()})")
 
-    notify_owner_now(settings, "Aurora Growth OS: monthly ops rollup", "\n".join(lines))
+    notify_owner_now(settings, "Olympus: monthly ops rollup", "\n".join(lines))
     return {"open_items": len(open_items), "overdue": len(overdue), "stale_scans": stale_scans}
