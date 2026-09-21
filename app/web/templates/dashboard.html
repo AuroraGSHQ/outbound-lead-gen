@@ -11,10 +11,12 @@
   <div class="card stat"><div class="n">{{ counts.clients_active }}</div><div class="label">Active clients</div></div>
   <div class="card stat"><div class="n">{{ counts.open_actions }}</div><div class="label">Open action items</div></div>
   <div class="card stat"><div class="n">{{ counts.unverified_scans }}</div><div class="label">Scans awaiting verification</div></div>
+  <div class="card stat"><div class="n">{{ counts.open_sourcing_requests }}</div><div class="label">Sourcing requests awaiting a CSV import</div></div>
 </div>
 
 <p><a href="/approvals"><strong>{{ counts.pending_approvals }}</strong> draft(s) waiting on your approval →</a></p>
 <p><a href="/actions"><strong>{{ counts.open_actions }}</strong> open item(s) on the action board →</a></p>
+<p><a href="/sourcing"><strong>{{ counts.open_sourcing_requests }}</strong> sourcing request(s) waiting on a Vibe Prospecting run →</a></p>
 
 {% if snapshot %}
 <h2>This month, at a glance</h2>
@@ -31,6 +33,7 @@
 
 <h2>Quick actions</h2>
 <p>
+  <a href="/sourcing/new">+ New sourcing request</a> ·
   <a href="/intake/new">+ New client intake</a> ·
   <a href="/scanner">Scanner</a> ·
   <a href="/team">Meet your AI team →</a>

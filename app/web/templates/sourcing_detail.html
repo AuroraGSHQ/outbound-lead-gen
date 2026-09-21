@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Sourcing request #{{ record.id }}</h1>
+<span class="badge {{ 'done' if record.status == 'fulfilled' else 'open' }}">{{ record.status }}</span>
+{% if record.imported_lead_count %}<span class="meta"> — {{ record.imported_lead_count }} lead(s) imported so far</span>{% endif %}
+
+<div class="card">
+  <h2>1. Run this in a Vibe-Prospecting-enabled Claude session</h2>
+  <p class="meta">Paste the prompt below. Vibe Prospecting will show you a cost estimate before spending any credits — review it, confirm, and it'll give you a CSV download link.</p>
+  <textarea id="prompt-box" readonly style="min-height: 220px;">{{ prompt }}</textarea>
+  <button type="button" class="secondary" onclick="navigator.clipboard.writeText(document.getElementById('prompt-box').value)">Copy prompt</button>
+</div>
+
+<div class="card">
+  <h2>2. Import the CSV it exports</h2>
+  <form method="post" action="/sourcing/{{ record.id }}/upload" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv" required>
+    <button type="submit">Upload &amp; map columns</button>
+  </form>
+</div>
+
+<p><a href="/sourcing">← back to sourcing requests</a></p>
+{% endblock %}

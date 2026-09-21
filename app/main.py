@@ -11,7 +11,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -37,11 +37,23 @@ from app.models import (
     Message,
     MessageStatus,
     ScanResult,
+    SourcingRequest,
     User,
     UserRole,
 )
 from app.scheduler import AGENT_JOBS, get_scheduler, start_scheduler
-from app.services import actions, ads, content, intake, metrics, referrals, scanner, users
+from app.services import (
+    actions,
+    ads,
+    content,
+    intake,
+    lead_import,
+    metrics,
+    referrals,
+    scanner,
+    sourcing_requests,
+    users,
+)
 from app.services.approvals import approve_and_send, pending_approvals, reject
 from app.services.notify import notify_meeting_booked
 from app.web.auth import (
@@ -159,6 +171,7 @@ def dashboard(request: Request, db: Session = Depends(get_db), user: User = Depe
         "open_actions": db.query(ActionItem).filter(ActionItem.status != "done").count(),
         "clients_active": db.query(Client).filter(Client.status == ClientStatus.ACTIVE.value).count(),
         "unverified_scans": db.query(ScanResult).filter(ScanResult.verified.is_(False)).count(),
+        "open_sourcing_requests": db.query(SourcingRequest).filter(SourcingRequest.status == "requested").count(),
     }
     snapshot = metrics.latest_snapshot(db)
     return templates.TemplateResponse(
@@ -252,6 +265,118 @@ def list_leads(request: Request, q: str = "", db: Session = Depends(get_db), use
         query = query.filter((Lead.company_name.ilike(like)) | (Lead.contact_email.ilike(like)))
     leads = query.order_by(Lead.created_at.desc()).limit(100).all()
     return templates.TemplateResponse("leads_list.html", {"request": request, "leads": leads, "q": q, "user": user})
+
+
+# --- Sourcing requests (Scout / Vibe Prospecting) -----------------------------
+
+
+@app.get("/sourcing", response_class=HTMLResponse)
+def list_sourcing(request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("sales"))):
+    return templates.TemplateResponse(
+        "sourcing_list.html", {"request": request, "requests": sourcing_requests.list_requests(db), "user": user}
+    )
+
+
+@app.get("/sourcing/new", response_class=HTMLResponse)
+def new_sourcing_request_form(request: Request, user: User = Depends(require_roles("sales"))):
+    return templates.TemplateResponse("sourcing_new.html", {"request": request, "user": user})
+
+
+@app.post("/sourcing/new")
+def create_sourcing_request(
+    industry: str = Form(""),
+    job_titles: str = Form(""),
+    locations: str = Form(""),
+    company_size: str = Form(""),
+    company_revenue: str = Form(""),
+    keywords: str = Form(""),
+    number_of_results: int = Form(30),
+    notes: str = Form(""),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("sales")),
+):
+    criteria = {
+        "industry": industry,
+        "job_titles": job_titles,
+        "locations": locations,
+        "company_size": company_size,
+        "company_revenue": company_revenue,
+        "keywords": keywords,
+        "number_of_results": number_of_results,
+        "notes": notes,
+    }
+    record = sourcing_requests.create_request(db, requested_by_user_id=user.id, criteria=criteria)
+    return RedirectResponse(f"/sourcing/{record.id}", status_code=303)
+
+
+@app.get("/sourcing/{request_id}", response_class=HTMLResponse)
+def view_sourcing_request(
+    request_id: int, request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("sales"))
+):
+    record = sourcing_requests.get_request(db, request_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return templates.TemplateResponse(
+        "sourcing_detail.html",
+        {"request": request, "record": record, "prompt": sourcing_requests.build_prompt(record), "user": user},
+    )
+
+
+@app.post("/sourcing/{request_id}/upload")
+async def upload_sourcing_csv(
+    request_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("sales")),
+):
+    raw = await file.read()
+    csv_text = raw.decode("utf-8-sig", errors="replace")
+    sourcing_requests.store_pending_csv(db, request_id, csv_text)
+    return RedirectResponse(f"/sourcing/{request_id}/map", status_code=303)
+
+
+@app.get("/sourcing/{request_id}/map", response_class=HTMLResponse)
+def map_sourcing_csv(
+    request_id: int, request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("sales"))
+):
+    record = sourcing_requests.get_request(db, request_id)
+    if record is None or not record.pending_csv:
+        raise HTTPException(status_code=404, detail="No uploaded file waiting to be mapped for this request.")
+    headers = lead_import.parse_headers(record.pending_csv)
+    suggestion = lead_import.suggest_mapping(headers)
+    return templates.TemplateResponse(
+        "sourcing_map.html",
+        {
+            "request": request,
+            "record": record,
+            "headers": headers,
+            "suggestion": suggestion,
+            "fields": lead_import.LEAD_FIELDS,
+            "user": user,
+        },
+    )
+
+
+@app.post("/sourcing/{request_id}/map")
+async def confirm_sourcing_mapping(
+    request_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales")),
+):
+    record = sourcing_requests.get_request(db, request_id)
+    if record is None or not record.pending_csv:
+        raise HTTPException(status_code=404, detail="No uploaded file waiting to be mapped for this request.")
+    form = await request.form()
+    mapping = {
+        field: form.get(f"map_{field}", "")
+        for field in lead_import.LEAD_FIELDS
+        if form.get(f"map_{field}")
+    }
+    stats = lead_import.import_leads_from_csv(db, settings, record.pending_csv, mapping)
+    sourcing_requests.mark_fulfilled(db, request_id, stats["imported"])
+    return RedirectResponse(f"/sourcing/{request_id}", status_code=303)
 
 
 # --- Intake (Concierge) -------------------------------------------------------

@@ -134,6 +134,22 @@ If you've already completed both:
 Either way, campaigns should always be created **paused** — a person flips
 them live, the same draft-and-approve principle as every send in this app.
 
+## 11. Vibe Prospecting sourcing (person-run, by design)
+
+Vibe Prospecting/Explorium has no portable API key to configure — it's
+accessed through a Claude MCP connector, session-scoped, and its own rules
+require showing you the credit cost and getting explicit confirmation
+before every export. That's a real guardrail, not a limitation to build
+around, so there's nothing to set up in `.env` for it: the app only needs
+somewhere to land the results.
+
+Workflow (also described in the README): create a request on the
+**Sourcing** page with your criteria, run the prompt it gives you in any
+Claude session that has the Vibe Prospecting connector enabled, then upload
+the resulting CSV back on that request's page. You'll confirm the column
+mapping (a best guess is pre-filled) before anything imports. From there,
+imported leads are scored and queued exactly like Apollo leads.
+
 ## Sizing your outreach volume (read this before chasing an aggressive revenue target)
 
 If the goal is a specific revenue number in a specific window, work the math

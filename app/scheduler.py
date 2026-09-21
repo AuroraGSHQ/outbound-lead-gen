@@ -96,7 +96,12 @@ AGENT_JOBS = [
         "key": "scout",
         "name": "Scout",
         "role": "Sourcing",
-        "description": "Searches Apollo against your ICP and scores new candidates daily.",
+        "description": (
+            "Searches Apollo against your ICP and scores new candidates daily. For Vibe "
+            "Prospecting (Explorium) — richer targeting, but credit-metered and confirm-"
+            "before-export by design — a person runs the search from a Sourcing request "
+            "and imports the CSV; see the Sourcing page."
+        ),
         "job_id": "source_leads",
     },
     {

@@ -358,6 +358,36 @@ class ReferralRecord(Base):
     client: Mapped["Client"] = relationship(back_populates="referrals")
 
 
+class SourcingRequestStatus(str, enum.Enum):
+    REQUESTED = "requested"
+    FULFILLED = "fulfilled"
+
+
+class SourcingRequest(Base):
+    """A scouting request for a data source that can't be called directly
+    from the backend — Vibe Prospecting (Explorium) is credit-metered and
+    requires a human to confirm cost before every export, so it can't run as
+    an unattended job the way Apollo sourcing does. This captures the
+    criteria, backs a ready-to-paste prompt for a Vibe-Prospecting-enabled
+    Claude session (services/sourcing_requests.py), and tracks the CSV
+    import that fulfills it (services/lead_import.py). `pending_csv` holds
+    an uploaded export between the upload step and the column-mapping
+    confirmation step, then gets cleared."""
+
+    __tablename__ = "sourcing_requests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    requested_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    criteria: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(50), default=SourcingRequestStatus.REQUESTED.value)
+    imported_lead_count: Mapped[int] = mapped_column(Integer, default=0)
+    pending_csv: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    fulfilled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    requested_by: Mapped["User | None"] = relationship()
+
+
 class MetricSnapshot(Base):
     """Daily rollup of the manual §15 six numbers, computed by the Analyst
     agent so the /metrics page doesn't recompute on every load."""

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>New sourcing request</h1>
+<p class="meta">Fill in as much as you know — everything's optional except being specific enough to search on. You'll get a ready-to-paste prompt on the next page.</p>
+<div class="card">
+  <form method="post" action="/sourcing/new">
+    <p><label>Industry / business type<br><input type="text" name="industry" placeholder="e.g. general contractors, roofing companies" style="width:100%;"></label></p>
+    <p><label>Job titles<br><input type="text" name="job_titles" placeholder="e.g. Owner, General Contractor, Project Manager" style="width:100%;"></label></p>
+    <p><label>Location(s)<br><input type="text" name="locations" placeholder="e.g. Indiana and adjacent metros" style="width:100%;"></label></p>
+    <p><label>Company size (employees)<br><input type="text" name="company_size" placeholder="e.g. 11-50" style="width:100%;"></label></p>
+    <p><label>Company revenue<br><input type="text" name="company_revenue" placeholder="e.g. 1M-5M" style="width:100%;"></label></p>
+    <p><label>Keywords / signals<br><input type="text" name="keywords" placeholder="e.g. currently running paid ads, new construction" style="width:100%;"></label></p>
+    <p><label>Number of results<br><input type="number" name="number_of_results" value="30" min="1" max="1000"></label></p>
+    <p><label>Notes for whoever runs this<br><textarea name="notes" placeholder="Anything else worth knowing"></textarea></label></p>
+    <button type="submit">Create request &amp; get prompt</button>
+  </form>
+</div>
+{% endblock %}

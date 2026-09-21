@@ -103,7 +103,7 @@ them and their cadence on the **Team** page once the app is running:
 
 | Agent | Does | Manual section |
 |---|---|---|
-| **Scout** | Sources leads from Apollo against your ICP | — |
+| **Scout** | Sources leads from Apollo against your ICP daily; Vibe Prospecting sourcing is a person-run request/import loop (see below) | — |
 | **Scanner** | Passive checks on prospect sites (speed, mobile, tracking, click-to-call); flags what a human still has to verify | §8 |
 | **Scribe** | Drafts first-touch/follow-up emails, polls replies, classifies intent | §9 |
 | **Concierge** | Turns discovery-call notes into a client record + action plan | new |
@@ -115,6 +115,28 @@ them and their cadence on the **Team** page once the app is running:
 Every agent that could produce something client-facing (an email, an ad,
 outreach copy) queues it in **Approvals** or the **Actions** board rather
 than sending/publishing it — see Architecture below.
+
+## Sourcing with Vibe Prospecting
+
+Apollo sourcing (Scout) runs on its own every morning, no one has to touch
+it. Vibe Prospecting (Explorium data — intent topics, tech stack, job-change
+events, richer than Apollo's filters) can't run that way: its own rules
+require a human to see the cost in credits and explicitly confirm before
+every export, on purpose, so nothing spends money unattended. So it's a
+request/fulfill loop instead of a cron job:
+
+1. On the **Sourcing** page, describe who you're looking for (industry, job
+   titles, location, company size/revenue, keywords) — this creates a
+   sourcing request and a ready-to-paste prompt.
+2. Paste that prompt into a Claude session that has the Vibe Prospecting
+   connector (Claude Code, claude.ai, wherever it's enabled for your
+   account). Review the cost estimate it shows you, confirm, and it hands
+   you a CSV download link.
+3. Back on the request's page, upload that CSV. You'll map its columns to
+   lead fields (a best-effort mapping is pre-selected — check it) and
+   import. Imported leads are scored against `config/icp.yaml` exactly like
+   Apollo leads and enter the same pipeline from there — drafts, approval
+   queue, replies, the works.
 
 ## Architecture
 
