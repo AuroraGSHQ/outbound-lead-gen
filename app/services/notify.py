@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.integrations import gmail
-from app.models import DigestState, Lead, LeadStatus, Meeting, Message, MessageStatus
+from app.models import ActionItem, DigestState, Lead, LeadStatus, Meeting, Message, MessageStatus
 
 logger = logging.getLogger(__name__)
 
@@ -68,19 +68,39 @@ def send_owner_digest(session: Session, settings: Settings) -> dict[str, int]:
         .filter(Lead.updated_at >= since)
         .all()
     )
+    open_action_items = session.query(ActionItem).filter(ActionItem.status != "done").all()
+    new_scan_verifications = (
+        session.query(ActionItem)
+        .filter(ActionItem.category == "scanner_verify", ActionItem.created_at >= since)
+        .all()
+    )
+    new_referral_asks = (
+        session.query(ActionItem)
+        .filter(ActionItem.category == "referral", ActionItem.created_at >= since)
+        .all()
+    )
+    new_ads_briefs = (
+        session.query(ActionItem)
+        .filter(ActionItem.category == "ads", ActionItem.created_at >= since)
+        .all()
+    )
 
     stats = {
         "pending_approvals": len(pending),
         "new_hot_leads": len(new_hot_leads),
         "new_meetings": len(new_meetings),
         "replies_needing_attention": len(replies_needing_attention),
+        "open_action_items": len(open_action_items),
+        "new_scan_verifications": len(new_scan_verifications),
+        "new_referral_asks": len(new_referral_asks),
+        "new_ads_briefs": len(new_ads_briefs),
     }
 
     if not any(stats.values()):
         logger.info("Nothing new since last digest; skipping owner email.")
         return stats
 
-    lines = ["Your outbound lead-gen bot has updates:\n"]
+    lines = ["Your Aurora Growth OS team has updates:\n"]
     if pending:
         lines.append(f"📝 {len(pending)} draft(s) waiting on your approval in the review UI.")
     if new_hot_leads:
@@ -93,8 +113,18 @@ def send_owner_digest(session: Session, settings: Settings) -> dict[str, int]:
         lines.append(f"\n💬 {len(replies_needing_attention)} conversation(s) need your eyes:")
         for lead in replies_needing_attention[:10]:
             lines.append(f"  - {lead.contact_name} @ {lead.company_name} — status: {lead.status}")
+    if new_scan_verifications:
+        lines.append(
+            f"\n🔎 {len(new_scan_verifications)} scanner finding(s) need a human to verify before use."
+        )
+    if new_referral_asks:
+        lines.append(f"\n🤝 {len(new_referral_asks)} 90-day review(s)/referral ask(s) are due.")
+    if new_ads_briefs:
+        lines.append(f"\n📢 {len(new_ads_briefs)} ad campaign brief(s) ready to review & publish.")
+    if open_action_items:
+        lines.append(f"\n✅ {len(open_action_items)} open action item(s) total on the /actions board.")
 
-    _send_owner_email(settings, "Outbound bot: daily update", "\n".join(lines))
+    _send_owner_email(settings, "Aurora Growth OS: daily update", "\n".join(lines))
     state.last_sent_at = datetime.now(timezone.utc)
     session.commit()
     return stats

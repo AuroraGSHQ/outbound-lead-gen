@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Clients</h1>
+<table>
+  <tr><th>Company</th><th>Status</th><th>Tier</th><th>Monthly fee</th><th>Start date</th></tr>
+  {% for c in clients %}
+  <tr>
+    <td><a href="/clients/{{ c.id }}">{{ c.company_name }}</a></td>
+    <td>{{ c.status }}</td>
+    <td>{{ c.tier }}</td>
+    <td>{{ c.monthly_fee }}</td>
+    <td>{{ c.start_date.strftime("%Y-%m-%d") if c.start_date else "—" }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No clients yet — they're created automatically from client intake.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Referral engine</h1>
+<p class="meta">The Connector agent drafts the ask script and forwardable intro automatically once a client's 90-day review comes due (see the Actions board). Log outcomes here.</p>
+
+<div class="card" style="max-width: 480px;">
+  <form method="post" action="/referrals/new">
+    <p><label>Client<br>
+      <select name="client_id" required>
+        {% for c in clients %}<option value="{{ c.id }}">{{ c.company_name }}</option>{% endfor %}
+      </select>
+    </label></p>
+    <p><label>Referrer name<br><input type="text" name="referrer_name" style="width:100%;"></label></p>
+    <p><label>Referred business/name<br><input type="text" name="referred_name" style="width:100%;"></label></p>
+    <p><label>Referred email<br><input type="email" name="referred_email" style="width:100%;"></label></p>
+    <p><label>Status<br>
+      <select name="status">
+        {% for s in ["asked", "introduced", "booked", "closed", "declined"] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+      </select>
+    </label></p>
+    <button type="submit">Log referral</button>
+  </form>
+</div>
+
+<table>
+  <tr><th>Client</th><th>Referrer</th><th>Referred</th><th>Status</th></tr>
+  {% for r in records %}
+  <tr>
+    <td>{{ r.client.company_name }}</td>
+    <td>{{ r.referrer_name }}</td>
+    <td>{{ r.referred_name }}</td>
+    <td>
+      <form method="post" action="/referrals/{{ r.id }}/status" style="display:inline;">
+        <select name="status" onchange="this.form.submit()">
+          {% for s in ["asked", "introduced", "booked", "closed", "declined"] %}
+          <option value="{{ s }}" {{ "selected" if r.status == s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">No referrals logged yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

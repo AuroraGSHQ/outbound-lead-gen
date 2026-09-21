@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ client.company_name }}</h1>
+<div class="card">
+  <p>Contact: {{ client.contact_name }} &lt;{{ client.contact_email }}&gt;</p>
+  <form method="post" action="/clients/{{ client.id }}/update">
+    <p><label>Status<br>
+      <select name="status">
+        {% for s in ["prospect", "active", "paused", "churned"] %}
+        <option value="{{ s }}" {{ "selected" if client.status == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>Tier<br><input type="text" name="tier" value="{{ client.tier }}"></label></p>
+    <p><label>Monthly fee<br><input type="number" step="0.01" name="monthly_fee" value="{{ client.monthly_fee }}"></label></p>
+    <p><label>Start date (sets the 90-day referral-review clock)<br>
+      <input type="date" name="start_date" value="{{ client.start_date.strftime('%Y-%m-%d') if client.start_date else '' }}">
+    </label></p>
+    <button type="submit">Save</button>
+  </form>
+  <p class="meta">{{ client.notes }}</p>
+</div>
+
+<h2>Action items</h2>
+{% for item in action_items %}
+<div class="card">
+  <span class="badge {{ 'done' if item.status == 'done' else 'open' }}">{{ item.status }}</span>
+  <strong>{{ item.title }}</strong> — {{ item.category }}
+</div>
+{% else %}<p>None yet.</p>{% endfor %}
+
+<h2>Referrals</h2>
+{% for r in referrals %}
+<div class="card">{{ r.referrer_name }} → {{ r.referred_name }} — <span class="badge open">{{ r.status }}</span></div>
+{% else %}<p>None logged yet — see the <a href="/referrals">Referrals page</a> once the 90-day review is due.</p>{% endfor %}
+{% endblock %}

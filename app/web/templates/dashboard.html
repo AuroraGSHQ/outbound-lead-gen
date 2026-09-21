@@ -8,6 +8,31 @@
   <div class="card stat"><div class="n">{{ counts.replied }}</div><div class="label">Replied</div></div>
   <div class="card stat"><div class="n">{{ counts.interested }}</div><div class="label">Interested</div></div>
   <div class="card stat"><div class="n">{{ counts.meetings_booked }}</div><div class="label">Meetings booked</div></div>
+  <div class="card stat"><div class="n">{{ counts.clients_active }}</div><div class="label">Active clients</div></div>
+  <div class="card stat"><div class="n">{{ counts.open_actions }}</div><div class="label">Open action items</div></div>
+  <div class="card stat"><div class="n">{{ counts.unverified_scans }}</div><div class="label">Scans awaiting verification</div></div>
 </div>
+
 <p><a href="/approvals"><strong>{{ counts.pending_approvals }}</strong> draft(s) waiting on your approval →</a></p>
+<p><a href="/actions"><strong>{{ counts.open_actions }}</strong> open item(s) on the action board →</a></p>
+
+{% if snapshot %}
+<h2>This month, at a glance</h2>
+<div class="card">
+  <p>Qualified conversations: <strong>{{ snapshot.qualified_conversations }}</strong> (manual target: 15–20/mo)</p>
+  <p>Cost per closed client: <strong>{{ snapshot.cost_per_closed_client if snapshot.cost_per_closed_client is not none else "—" }}</strong></p>
+  <p>Avg time to close: <strong>{{ snapshot.avg_time_to_close_days if snapshot.avg_time_to_close_days is not none else "—" }} days</strong></p>
+  <p>Referral share of new clients: <strong>{{ (snapshot.referral_share * 100) | round(1) if snapshot.referral_share is not none else "—" }}{% if snapshot.referral_share is not none %}%{% endif %}</strong></p>
+  <p><a href="/metrics">Full metrics →</a></p>
+</div>
+{% else %}
+<p class="meta">No metric snapshot yet — the Analyst agent computes one daily.</p>
+{% endif %}
+
+<h2>Quick actions</h2>
+<p>
+  <a href="/intake/new">+ New client intake</a> ·
+  <a href="/scanner">Scanner</a> ·
+  <a href="/team">Meet your AI team →</a>
+</p>
 {% endblock %}

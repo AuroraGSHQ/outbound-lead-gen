@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Intake: {{ intake.client.company_name if intake.client else "" }}</h1>
+<div class="card">
+  <p><strong>Snapshot:</strong> {{ intake.structured.get("company_snapshot", "") }}</p>
+  <p><strong>Pain points:</strong></p>
+  <ul>{% for p in intake.structured.get("pain_points", []) %}<li>{{ p }}</li>{% endfor %}</ul>
+  <p><strong>Goals:</strong></p>
+  <ul>{% for g in intake.structured.get("goals", []) %}<li>{{ g }}</li>{% endfor %}</ul>
+  <p><strong>Budget signal:</strong> {{ intake.structured.get("budget_signal", "") }}</p>
+  <p><strong>Decision maker:</strong> {{ intake.structured.get("decision_maker", "") }}</p>
+  <p><strong>Timeline:</strong> {{ intake.structured.get("timeline", "") }}</p>
+  <p><strong>Recommended tier:</strong> {{ intake.structured.get("recommended_tier", "") }}</p>
+  <p><strong>Objections:</strong></p>
+  <ul>{% for o in intake.structured.get("objections", []) %}<li>{{ o }}</li>{% endfor %}</ul>
+</div>
+
+<h2>Generated action plan</h2>
+{% for item in action_items %}
+<div class="card">
+  <span class="badge {{ 'done' if item.status == 'done' else 'open' }}">{{ item.status }}</span>
+  <strong>{{ item.title }}</strong>
+  <p class="meta">{{ item.category }}{% if item.auto_executable %} · automated{% endif %}</p>
+  <p>{{ item.description }}</p>
+  {% if item.result %}<p><em>{{ item.result }}</em></p>{% endif %}
+  <a href="/actions">Manage on Actions board →</a>
+</div>
+{% else %}
+<p>No action items generated.</p>
+{% endfor %}
+
+{% if intake.client %}
+<p><a href="/clients/{{ intake.client.id }}">View client record →</a></p>
+{% endif %}
+<details><summary>Raw call notes</summary><pre style="white-space: pre-wrap;">{{ intake.raw_notes }}</pre></details>
+{% endblock %}

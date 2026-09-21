@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Intake calls</h1>
+<p><a href="/intake/new">+ New intake</a> · <a href="/leads">Browse leads</a></p>
+{% for i in intakes %}
+<div class="card">
+  <div class="meta">{{ i.created_at.strftime("%Y-%m-%d %H:%M") }} — {{ i.client.company_name if i.client else "" }}</div>
+  <p>{{ i.structured.get("company_snapshot", "") }}</p>
+  <a href="/intake/{{ i.id }}">View plan →</a>
+</div>
+{% else %}
+<p>No intake calls logged yet.</p>
+{% endfor %}
+{% endblock %}

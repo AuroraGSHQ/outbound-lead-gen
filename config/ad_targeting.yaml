@@ -1,0 +1,46 @@
+# Audience targeting + creative-angle definitions, from the Acquisition
+# Manual §5 and §6. Used by the Promoter agent (app/services/ads.py) when
+# generating ad copy/briefs — edit to match your real ICP as it firms up.
+
+segment_smb:
+  role: "Owner-operator — founder, president, or owner. Frequently the person who still quotes jobs personally."
+  age_range: "35 to 58"
+  business_revenue: "$500k to $8M annually"
+  business_signals:
+    - "Currently running paid ads"
+    - "Has a Google Business Profile with reviews"
+    - "1 to 8 crews or trucks"
+    - "Uses field service software"
+  geography: "Start in-state and adjacent metros; expand to comparable secondary markets before major metros."
+  exclusions:
+    - "Marketing/advertising job titles, agencies"
+    - "Students, anyone under 25"
+    - "Businesses with no digital presence at all"
+
+segment_enterprise:
+  job_titles:
+    - "VP or Director of Marketing"
+    - "Head of Growth"
+    - "Director of Franchise Development"
+    - "VP Operations"
+    - "Marketing Manager at multi-location groups"
+  seniority: "Director and VP — deliberately not C-suite (costs 3-5x more)."
+  company_size: "200 to 5,000 employees, or any franchisor with 15+ locations"
+  industries:
+    - "Consumer services"
+    - "Facilities services"
+    - "Construction and trades"
+    - "Residential services roll-ups"
+    - "Franchising"
+
+angles:
+  - name: "the leak"
+    example_line: "You are already paying for leads that nobody calls back."
+  - name: "the operator"
+    example_line: "We run a home services company. We built this for ourselves first."
+  - name: "the proof"
+    example_line: "How [named business] went from X to Y booked jobs in 90 days."
+  - name: "the risk reversal"
+    example_line: "We put a booked-job floor in the contract. Miss it and you stop paying."
+  - name: "the mechanism"
+    example_line: "Every lead answered in sixty seconds, qualified and booked."

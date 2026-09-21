@@ -79,6 +79,61 @@ without emailing them) but never queued for outreach.
 Set `OWNER_EMAIL` to where you want the daily digest and meeting-booked
 alerts sent (defaults can just be your own address).
 
+## 8. Team accounts
+
+`OWNER_UI_USERNAME`/`OWNER_UI_PASSWORD` seed exactly one `owner` account the
+first time the app starts against an empty database — after that, log in
+and use **Users** (owner-only) to create a real account for everyone else,
+with the role matching what they actually do:
+
+- `owner` — everything, including user management.
+- `sales` — leads, intake, clients, outreach approvals.
+- `marketing` — scanner, ads, content, metrics.
+- `ops` — clients, referrals, the action-item board.
+
+Everyone can view the dashboard, Team, and Metrics pages regardless of role.
+There's also a CLI fallback if you'd rather not use the UI:
+
+```bash
+python scripts/create_user.py --name "Alex Rivera" --email alex@yourcompany.com --role sales
+```
+
+It'll prompt for a password interactively (never pass one on the command
+line where it'd land in shell history).
+
+## 9. Scanner agent (optional review-count check)
+
+The Broken-Funnel Scanner (manual §8) runs its cheap/objective checks (page
+load, mobile viewport, tracking pixels, click-to-call) against any domain
+with no setup. If you also want the review-count/recency check, get a key
+from [Google Cloud Console → Places API](https://console.cloud.google.com)
+and set `GOOGLE_PLACES_API_KEY` — this integration point exists in
+`app/integrations/site_checks.py` but isn't wired to Places yet; without a
+key the scanner simply skips that one check and still runs everything else.
+
+## 10. Ads agent (optional, advanced)
+
+By default the Promoter agent generates a full campaign brief every month
+(budget split, audience, ad copy) and hands it to you as a ready-to-paste
+package — publishing stays a two-minute manual step in Google Ads / Meta Ads
+Manager. This is deliberate: both platforms require a developer application
++ review before their APIs can create anything, so brief-only is the honest
+default until you've done that.
+
+If you've already completed both:
+1. Google Ads: apply for a developer token, set up OAuth credentials, get a
+   refresh token, then set `GOOGLE_ADS_DEVELOPER_TOKEN` (plus the
+   client id/secret/refresh token/customer id your integration needs), add
+   the `google-ads` package to `requirements.txt`, and implement
+   `create_paused_campaign()` in `app/integrations/google_ads.py`.
+2. Meta: get Marketing API access approved for your app, set
+   `META_ACCESS_TOKEN` (plus app id/secret/ad account id), add the
+   `facebook-business` package, and implement `create_paused_campaign()` in
+   `app/integrations/meta_ads.py`.
+
+Either way, campaigns should always be created **paused** — a person flips
+them live, the same draft-and-approve principle as every send in this app.
+
 ## Sizing your outreach volume (read this before chasing an aggressive revenue target)
 
 If the goal is a specific revenue number in a specific window, work the math
@@ -132,7 +187,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 - **VM / systemd**: run the above under a systemd unit (or `screen`/`tmux`
   for a quick test), put a reverse proxy (Caddy/nginx) with TLS in front of
-  it so Calendly's webhook can reach it over HTTPS.
+  it so Calendly's webhook can reach it over HTTPS. This also matters for
+  the PWA install: phones only offer "Add to Home Screen"/"Install app" for
+  a page served over real HTTPS on a real domain, not for `localhost` or
+  plain HTTP.
 - **Docker**: no Dockerfile is included yet — it's a straightforward
   `python:3.12-slim` + `pip install -r requirements.txt` + the uvicorn
   command above; ask if you want one written.

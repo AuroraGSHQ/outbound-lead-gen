@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     # Lead sourcing
     apollo_api_key: str = ""
 
+    # Scanner agent (optional — review-count/recency check is skipped without it)
+    google_places_api_key: str = ""
+
+    # Ads agent — real publishing stays off until these are set (see
+    # app/integrations/google_ads.py / meta_ads.py)
+    google_ads_developer_token: str = ""
+    meta_access_token: str = ""
+
     # Gmail
     gmail_sender_email: str = ""
     gmail_credentials_path: str = "data/credentials.json"

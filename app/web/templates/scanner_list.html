@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Broken-Funnel Scanner</h1>
+<p class="meta">Passive checks only — no form submissions, no auto-dialing (manual §8). Add a domain, the scanner checks what it safely can, and creates a task for the two checks a person has to do by hand.</p>
+<div class="card" style="max-width: 460px;">
+  <form method="post" action="/scanner/new">
+    <p><label>Domain<br><input type="text" name="domain" placeholder="example.com" required style="width:100%;"></label></p>
+    <p><label>Company name<br><input type="text" name="company_name" style="width:100%;"></label></p>
+    <button type="submit">Scan now</button>
+  </form>
+</div>
+
+<table>
+  <tr><th>Domain</th><th>Checked</th><th>Faults</th><th>Leak score</th><th>Verified</th></tr>
+  {% for r in results %}
+  <tr>
+    <td><a href="/scanner/{{ r.id }}">{{ r.domain }}</a></td>
+    <td>{{ r.checked_at.strftime("%Y-%m-%d") if r.scanned else "pending" }}</td>
+    <td>{{ r.fault_list|length }}</td>
+    <td>{{ r.leak_score }}</td>
+    <td><span class="badge {{ 'verified' if r.verified else 'unverified' }}">{{ "yes" if r.verified else "no" }}</span></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No targets queued yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

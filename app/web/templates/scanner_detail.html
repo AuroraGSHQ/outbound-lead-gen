@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ scan.domain }}</h1>
+<div class="card">
+  <p class="meta">Checked {{ scan.checked_at.strftime("%Y-%m-%d %H:%M") if scan.scanned else "not yet" }} — leak score {{ scan.leak_score }}</p>
+  <p>Load time: {{ scan.load_time_ms }}ms · Mobile viewport: {{ scan.mobile_ok }} · Tracking present: {{ scan.tracking_present }} · Click-to-call: {{ scan.click_to_call_present }}</p>
+  <p><strong>Faults found (automated checks only):</strong></p>
+  <ul class="fault-list">{% for f in scan.fault_list %}<li>{{ f }}</li>{% endfor %}</ul>
+</div>
+
+{% if not scan.verified %}
+<div class="card">
+  <h2>Verify by hand before using this in outreach</h2>
+  <p class="meta">Manual §8: submit one genuine test enquiry and time the reply; call at three different times of day and log whether a human answers. Never send a fault-led message you haven't personally verified.</p>
+  <form method="post" action="/scanner/{{ scan.id }}/verify">
+    <textarea name="notes" placeholder="What you found when you checked by hand"></textarea>
+    <button type="submit">Mark verified</button>
+  </form>
+</div>
+{% else %}
+<div class="card">
+  <span class="badge verified">Verified</span>
+  <p>{{ scan.verification_notes }}</p>
+  <h2>Draft fault-led outreach</h2>
+  <form method="post" action="/scanner/{{ scan.id }}/draft-outreach">
+    <p><label>Contact name<br><input type="text" name="contact_name"></label></p>
+    <p><label>Contact title<br><input type="text" name="contact_title"></label></p>
+    <p><label>Contact email<br><input type="email" name="contact_email" required></label></p>
+    <button type="submit">Generate draft → Approvals</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

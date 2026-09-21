@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Measurement</h1>
+<p class="meta">The six numbers manual §15 says matter — everything else is decoration. Computed daily by the Analyst agent.</p>
+
+{% if history %}
+{% set latest = history[0] %}
+<div class="grid">
+  <div class="card stat"><div class="n">{{ latest.qualified_conversations }}</div><div class="label">Qualified conversations (target 15–20/mo)</div></div>
+  <div class="card stat"><div class="n">{{ latest.cost_per_closed_client if latest.cost_per_closed_client is not none else "—" }}</div><div class="label">Cost per closed client (target &lt;$1,800 for Core)</div></div>
+  <div class="card stat"><div class="n">{{ latest.avg_time_to_close_days if latest.avg_time_to_close_days is not none else "—" }}</div><div class="label">Avg time to close, days (target &lt;14)</div></div>
+  <div class="card stat"><div class="n">{{ (latest.referral_share * 100) | round(1) if latest.referral_share is not none else "—" }}{% if latest.referral_share is not none %}%{% endif %}</div><div class="label">Referral share of new clients (target 30%+)</div></div>
+</div>
+
+<h2>Cost per qualified conversation, by channel</h2>
+<table>
+  <tr><th>Channel</th><th>Cost</th></tr>
+  {% for channel, cost in latest.cost_per_qualified_conversation.items() %}
+  <tr><td>{{ channel }}</td><td>{{ cost }}</td></tr>
+  {% else %}<tr><td colspan="2">Not enough attributed data yet.</td></tr>{% endfor %}
+</table>
+
+<h2>Close rate, by channel</h2>
+<table>
+  <tr><th>Channel</th><th>Rate</th></tr>
+  {% for channel, rate in latest.close_rate.items() %}
+  <tr><td>{{ channel }}</td><td>{{ (rate * 100) | round(1) }}%</td></tr>
+  {% else %}<tr><td colspan="2">Not enough data yet.</td></tr>{% endfor %}
+</table>
+
+<h2>History</h2>
+<table>
+  <tr><th>Date</th><th>Conversations</th><th>Cost/closed</th><th>Time to close</th><th>Referral share</th></tr>
+  {% for s in history %}
+  <tr>
+    <td>{{ s.date.strftime("%Y-%m-%d") }}</td>
+    <td>{{ s.qualified_conversations }}</td>
+    <td>{{ s.cost_per_closed_client if s.cost_per_closed_client is not none else "—" }}</td>
+    <td>{{ s.avg_time_to_close_days if s.avg_time_to_close_days is not none else "—" }}</td>
+    <td>{{ (s.referral_share * 100) | round(1) if s.referral_share is not none else "—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No snapshots yet — the Analyst agent computes one daily, or trigger it from the Team page.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Team accounts</h1>
+<table>
+  <tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th>Last login</th></tr>
+  {% for t in team %}
+  <tr>
+    <td>{{ t.name }}</td>
+    <td>{{ t.email }}</td>
+    <td>{{ t.role }}</td>
+    <td>{{ "yes" if t.active else "no" }}</td>
+    <td>{{ t.last_login_at.strftime("%Y-%m-%d %H:%M") if t.last_login_at else "never" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Add a teammate</h2>
+<div class="card" style="max-width: 420px;">
+  <form method="post" action="/users/new">
+    <p><label>Name<br><input type="text" name="name" required style="width:100%;"></label></p>
+    <p><label>Email<br><input type="email" name="email" required style="width:100%;"></label></p>
+    <p><label>Temporary password<br><input type="password" name="password" required style="width:100%;"></label></p>
+    <p><label>Role<br>
+      <select name="role">
+        {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+      </select>
+    </label></p>
+    <button type="submit">Create account</button>
+  </form>
+</div>
+{% endblock %}
