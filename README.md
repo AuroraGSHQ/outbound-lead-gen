@@ -113,7 +113,7 @@ turned back on. Nothing it already produced gets deleted.
 |---|---|---|
 | **Hermes** | Sources leads from Apollo against your ICP daily; Vibe Prospecting sourcing is a person-run request/import loop (see below) | — |
 | **Momus** | Passive checks on prospect sites (speed, mobile, tracking, click-to-call); flags what a human still has to verify | §8 |
-| **Peitho** | Drafts first-touch/follow-up emails, polls replies, classifies intent | §9 |
+| **Peitho** | Drafts first-touch/follow-up emails, polls replies, classifies intent. Also texts and calls leads (Twilio + ElevenLabs) once they have a phone number on file | §9 |
 | **Themis** | Turns discovery-call notes into a client record + action plan | new |
 | **Philotes** | Watches for 90-day reviews and drafts the referral ask | §11 |
 | **Pheme** | Generates the monthly ad campaign brief from the budget calendar | §4/§6/§14 |

@@ -41,6 +41,13 @@ class MessageStatus(str, enum.Enum):
     RECEIVED = "received"  # inbound message from the prospect; not part of the approval flow
 
 
+class MessageChannel(str, enum.Enum):
+    EMAIL = "email"
+    SMS = "sms"
+    VOICE = "voice"  # a one-way outbound voice message (ElevenLabs script, played via Twilio) —
+    # not a live two-way phone conversation, that's a distinct, much larger feature
+
+
 class Lead(Base):
     __tablename__ = "leads"
 
@@ -54,6 +61,7 @@ class Lead(Base):
     contact_name: Mapped[str] = mapped_column(String(255), default="")
     contact_title: Mapped[str] = mapped_column(String(255), default="")
     contact_email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    contact_phone: Mapped[str] = mapped_column(String(50), default="")  # E.164, e.g. +15551234567 — required for SMS/voice
     linkedin_url: Mapped[str] = mapped_column(String(500), default="")
 
     source: Mapped[str] = mapped_column(String(50), default="apollo")
@@ -97,10 +105,13 @@ class Message(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"), index=True)
     direction: Mapped[str] = mapped_column(String(20))
+    channel: Mapped[str] = mapped_column(String(20), default=MessageChannel.EMAIL.value)
     subject: Mapped[str] = mapped_column(String(500), default="")
     body: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(50), default=MessageStatus.DRAFT.value)
     gmail_message_id: Mapped[str] = mapped_column(String(255), default="", index=True)
+    twilio_sid: Mapped[str] = mapped_column(String(255), default="", index=True)  # SMS or Call SID
+    voice_clip_path: Mapped[str] = mapped_column(String(500), default="")  # local path to the synthesized ElevenLabs audio
     detected_intent: Mapped[str] = mapped_column(String(50), default="")
     reviewer_note: Mapped[str] = mapped_column(Text, default="")
 

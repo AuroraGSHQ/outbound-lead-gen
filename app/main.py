@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -26,6 +26,7 @@ from app.integrations.calendly import (
     extract_scheduled_time,
     verify_signature,
 )
+from app.integrations import twilio_sms
 from app.models import (
     ActionItem,
     AdCampaign,
@@ -56,6 +57,7 @@ from app.services import (
     lead_import,
     metrics,
     onboarding,
+    phone_outreach,
     proposals,
     recon,
     referrals,
@@ -304,6 +306,77 @@ def run_recon(
 ):
     recon.prep_meeting_brief(db, settings, lead_id)
     return RedirectResponse("/actions", status_code=303)
+
+
+@app.post("/leads/{lead_id}/phone")
+def update_lead_phone(
+    lead_id: int,
+    contact_phone: str = Form(""),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("sales")),
+):
+    lead = db.get(Lead, lead_id)
+    if lead is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    lead.contact_phone = contact_phone.strip()
+    db.commit()
+    return RedirectResponse("/leads", status_code=303)
+
+
+@app.post("/leads/{lead_id}/draft-sms")
+def draft_sms(
+    lead_id: int,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales")),
+):
+    try:
+        message = phone_outreach.draft_sms_for_lead(db, settings, lead_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return RedirectResponse(f"/approvals/{message.id}", status_code=303)
+
+
+@app.post("/leads/{lead_id}/draft-call")
+def draft_call(
+    lead_id: int,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales")),
+):
+    try:
+        message = phone_outreach.draft_call_for_lead(db, settings, lead_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return RedirectResponse(f"/approvals/{message.id}", status_code=303)
+
+
+# --- Twilio (Peitho's phone channel) --------------------------------------
+
+
+@app.post("/webhooks/twilio-sms")
+async def twilio_sms_webhook(request: Request, db: Session = Depends(get_db), settings: Settings = Depends(get_settings)):
+    form = await request.form()
+    params = {k: v for k, v in form.items()}
+    signature = request.headers.get("X-Twilio-Signature", "")
+    if settings.twilio_auth_token and not twilio_sms.validate_webhook_signature(
+        settings.twilio_auth_token, str(request.url), params, signature
+    ):
+        raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
+    from_number = params.get("From", "")
+    body = params.get("Body", "")
+    if from_number and body:
+        phone_outreach.receive_sms_reply(db, from_number, body)
+    return PlainTextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', media_type="text/xml")
+
+
+@app.get("/voice-clips/{message_id}.mp3")
+def get_voice_clip(message_id: int, db: Session = Depends(get_db), settings: Settings = Depends(get_settings)):
+    message = db.get(Message, message_id)
+    if message is None or not message.voice_clip_path:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(message.voice_clip_path, media_type="audio/mpeg")
 
 
 # --- Sourcing requests (Hermes / Vibe Prospecting) -----------------------------

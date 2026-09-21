@@ -48,6 +48,44 @@ class ClaudeDrafter:
         text = "".join(block.text for block in resp.content if block.type == "text")
         return _extract_json(text)
 
+    def draft_sms_first_touch(self, lead: dict[str, Any], profile: BusinessProfile) -> str:
+        system = (
+            "Write a short first-touch SMS to a business prospect — under 300 characters. "
+            "Plain, direct, no emoji, no hype. One reason this specific recipient might care "
+            "and a clear way to say yes (reply, or book a time). Must read like a real person "
+            "texting, not a marketing blast. Sign off with just a first name — do not add an "
+            "opt-out line or company name, those are appended separately by the app. "
+            'Respond with ONLY JSON: {"body": "..."}.'
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Sender: {profile.sender_name}. Booking link: {profile.calendly_link}"
+        )
+        data = self._complete_json(system, user, max_tokens=256)
+        return data.get("body", "")
+
+    def draft_call_script(self, lead: dict[str, Any], profile: BusinessProfile) -> str:
+        system = (
+            "Write a short spoken script for a one-way outbound voice message (like a "
+            "personalized voicemail drop, not a live conversation) — 20 to 30 seconds when "
+            "read aloud at a natural pace (roughly 55-75 words). Conversational, warm, "
+            "specific to this recipient, one clear reason to call back or book a time. No "
+            "corporate phrasing, no reading-out-loud awkwardness — write it the way a person "
+            "actually talks, with natural pauses (use periods/commas, not stage directions). "
+            "End by saying the booking link or asking them to call back. "
+            'Respond with ONLY JSON: {"script": "..."}.'
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Sender: {profile.sender_name}, {profile.sender_title}. Booking link: {profile.calendly_link}"
+        )
+        data = self._complete_json(system, user, max_tokens=256)
+        return data.get("script", "")
+
     def draft_first_touch_email(
         self, lead: dict[str, Any], profile: BusinessProfile
     ) -> dict[str, str]:

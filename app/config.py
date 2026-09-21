@@ -38,6 +38,20 @@ class Settings(BaseSettings):
     gmail_credentials_path: str = "data/credentials.json"
     gmail_token_path: str = "data/token.json"
 
+    # Twilio (Peitho's phone channel — SMS + outbound voice)
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_from_number: str = ""
+
+    # ElevenLabs (text-to-speech for Peitho's voice channel)
+    elevenlabs_api_key: str = ""
+    elevenlabs_voice_id: str = ""
+    voice_clip_dir: str = "data/voice_clips"
+    # Publicly reachable base URL for this app (e.g. https://olympus.up.railway.app) —
+    # Twilio fetches the synthesized voice clip from here, so it must be a real
+    # internet-reachable HTTPS URL, not localhost.
+    public_base_url: str = ""
+
     # Calendly
     calendly_booking_link: str = ""
     calendly_webhook_signing_key: str = ""

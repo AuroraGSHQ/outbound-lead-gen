@@ -270,7 +270,7 @@ AGENT_JOBS = [
         "key": "peitho",
         "name": "Peitho",
         "role": "Outreach + conversation (manual §9)",
-        "description": "Drafts first-touch and follow-up emails, polls for replies, classifies intent — everything queues for approval.",
+        "description": "Drafts first-touch and follow-up emails, polls for replies, classifies intent. Also drafts SMS and one-way voice messages (Twilio + ElevenLabs) on demand from a lead's page once they have a phone number on file — everything queues for approval.",
         "job_id": "generate_drafts",
     },
     {

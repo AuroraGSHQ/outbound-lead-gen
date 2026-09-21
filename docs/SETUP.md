@@ -201,6 +201,48 @@ recorded in that client's sync log and on the CRM Sync page, so a bad key
 or a stale board ID shows up immediately instead of silently dropping a
 lead.
 
+## 14. Twilio + ElevenLabs — Peitho's phone channel (optional)
+
+Peitho can text and call leads, on top of email — SMS is a straightforward
+send/receive; voice is a **one-way message**: a script gets drafted, synthesized
+into audio by ElevenLabs, and Twilio calls the lead and plays it back. This is
+not a live two-way phone conversation — a real-time voice agent (speech-to-text,
+streaming Claude, streaming TTS over Twilio Media Streams) is a much bigger
+build and isn't included here.
+
+**Twilio** (SMS + calls):
+1. Create an account at twilio.com, buy a phone number capable of SMS + voice.
+2. From the Twilio Console, copy your Account SID and Auth Token into
+   `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`.
+3. Set `TWILIO_FROM_NUMBER` to the number you bought, in E.164 format
+   (`+15551234567`).
+4. For inbound SMS replies to reach Olympus, point that number's messaging
+   webhook (Console → Phone Numbers → your number → Messaging → "A message
+   comes in") at `https://<your-domain>/webhooks/twilio-sms`. This only
+   works once the app is deployed somewhere with a real HTTPS URL —
+   `localhost` can't receive Twilio's webhook.
+
+**ElevenLabs** (voice only — skip this if you only want SMS):
+1. Create an account at elevenlabs.io, get an API key, and set
+   `ELEVENLABS_API_KEY`.
+2. Pick (or clone) a voice, and set `ELEVENLABS_VOICE_ID` to its id.
+3. Set `PUBLIC_BASE_URL` to your app's real HTTPS URL (e.g.
+   `https://olympus.up.railway.app`) — Twilio needs to fetch the synthesized
+   clip from a real internet address to play it on the call, so this has to
+   be set before any voice call will work. It stays blank harmlessly until
+   then; a voice send just fails with a clear error telling you to set it.
+
+**Using it**: on a lead's row on the `/leads` page, add their phone number
+(E.164 format), then use "Peitho: draft SMS" or "Peitho: draft call" —
+both land in the same Approvals queue as email drafts, so nothing calls or
+texts a lead without a human clicking approve.
+
+**Compliance note**: SMS marketing has its own rules (TCPA in the US) —
+every outbound SMS this app drafts gets a "Reply STOP to opt out" line
+appended automatically, but you're still responsible for how you use this
+(consent to text, calling hours, do-not-call lists). Read up on TCPA
+requirements for your use case before sending real SMS/calls at any volume.
+
 ## Sizing your outreach volume (read this before chasing an aggressive revenue target)
 
 If the goal is a specific revenue number in a specific window, work the math
