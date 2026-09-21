@@ -167,6 +167,40 @@ the resulting CSV back on that request's page. You'll confirm the column
 mapping (a best guess is pre-filled) before anything imports. From there,
 imported leads are scored and queued exactly like Apollo leads.
 
+## 13. CRM sync — Charon (per client, optional)
+
+Charon (the **CRM Sync** page) lets your team paste a lead's details — an
+email, a form submission, call notes — and pushes the extracted contact
+straight into that specific client's own CRM. Each client's connection is
+configured once, on their client page, under "CRM connection — Charon"; no
+credentials live in `.env`, because each client uses their own CRM account,
+not yours.
+
+Pick a client's provider and fill in what it needs:
+
+- **HubSpot** — an API key only. In the client's HubSpot account: Settings →
+  Integrations → Private Apps → create one with the `crm.objects.contacts`
+  scopes → copy the generated token into the "API key" field.
+- **Monday.com** — an API key, a board ID, and a column map. In the client's
+  Monday account: avatar → Admin → API → generate a personal token. The
+  board ID is the number in that board's URL. The column map is JSON
+  mapping Charon's fields (`full_name`, `first_name`, `last_name`, `email`,
+  `phone`, `company`, `source`, `notes`) to that board's column IDs, e.g.
+  `{"email": "email_mkp8", "phone": "phone_mkp9"}` — find column IDs from
+  the board's "..." menu → "Export board" or via Monday's API playground.
+- **GoHighLevel** — an API key and a location ID. In the client's HighLevel
+  sub-account: Settings → Private Integrations → create one with the
+  contacts read/write scopes. The location ID is shown on that same
+  Settings page.
+- **Other** — no built-in integration yet; the sync log will say to log
+  the lead into that client's CRM by hand.
+
+A blank API key field on save means "keep the key already stored" — it's
+never echoed back to the browser. Every push (success or failure) is
+recorded in that client's sync log and on the CRM Sync page, so a bad key
+or a stale board ID shows up immediately instead of silently dropping a
+lead.
+
 ## Sizing your outreach volume (read this before chasing an aggressive revenue target)
 
 If the goal is a specific revenue number in a specific window, work the math

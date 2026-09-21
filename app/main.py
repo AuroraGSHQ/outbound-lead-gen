@@ -7,6 +7,7 @@ agents) are wired up in app/scheduler.py and started here on app startup.
 """
 from __future__ import annotations
 
+import json
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -31,6 +32,7 @@ from app.models import (
     Client,
     ClientStatus,
     CompetitorNoteType,
+    CrmProvider,
     IntakeCall,
     Lead,
     LeadStatus,
@@ -49,6 +51,7 @@ from app.services import (
     agent_toggles,
     competitor_watch,
     content,
+    crm_sync,
     intake,
     lead_import,
     metrics,
@@ -546,9 +549,17 @@ def view_client(
         raise HTTPException(status_code=404, detail="Not found")
     client_referrals = db.query(referrals.ReferralRecord).filter(referrals.ReferralRecord.client_id == client_id).all()
     action_items = db.query(ActionItem).filter(ActionItem.client_id == client_id).all()
+    crm_logs = crm_sync.list_logs(db, client_id=client_id)
     return templates.TemplateResponse(
         "client_detail.html",
-        {"request": request, "client": client, "referrals": client_referrals, "action_items": action_items, "user": user},
+        {
+            "request": request,
+            "client": client,
+            "referrals": client_referrals,
+            "action_items": action_items,
+            "crm_logs": crm_logs,
+            "user": user,
+        },
     )
 
 
@@ -586,6 +597,90 @@ def generate_client_proposal(
 ):
     proposals.generate_proposal(db, settings, client_id)
     return RedirectResponse("/actions", status_code=303)
+
+
+@app.post("/clients/{client_id}/crm-config")
+def update_client_crm_config(
+    client_id: int,
+    crm_provider: str = Form(CrmProvider.NONE.value),
+    crm_api_key: str = Form(""),
+    crm_board_id: str = Form(""),
+    crm_location_id: str = Form(""),
+    crm_column_map: str = Form(""),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("sales", "ops")),
+):
+    client = db.get(Client, client_id)
+    if client is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    client.crm_provider = crm_provider
+    if crm_api_key.strip():  # blank means "leave the existing key alone"
+        client.crm_api_key = crm_api_key.strip()
+    config: dict = {}
+    if crm_board_id.strip():
+        config["board_id"] = crm_board_id.strip()
+    if crm_location_id.strip():
+        config["location_id"] = crm_location_id.strip()
+    if crm_column_map.strip():
+        try:
+            config["column_map"] = json.loads(crm_column_map)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Column map must be valid JSON, e.g. {\"email\": \"text_1\"}")
+    client.crm_config = config
+    db.commit()
+    return RedirectResponse(f"/clients/{client_id}", status_code=303)
+
+
+# --- CRM sync (Charon) ---------------------------------------------------------
+
+
+@app.get("/crm-sync", response_class=HTMLResponse)
+def new_crm_sync(request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("sales", "ops"))):
+    clients = db.query(Client).order_by(Client.company_name.asc()).all()
+    return templates.TemplateResponse(
+        "crm_sync_new.html",
+        {"request": request, "clients": clients, "logs": crm_sync.list_logs(db)[:20], "user": user},
+    )
+
+
+@app.post("/crm-sync/parse", response_class=HTMLResponse)
+def parse_crm_sync(
+    request: Request,
+    client_id: int = Form(...),
+    raw_text: str = Form(...),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    user: User = Depends(require_roles("sales", "ops")),
+):
+    client = db.get(Client, client_id)
+    if client is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    fields = crm_sync.parse_lead_details(settings, raw_text)
+    return templates.TemplateResponse(
+        "crm_sync_review.html", {"request": request, "client": client, "fields": fields, "user": user}
+    )
+
+
+@app.post("/crm-sync/push")
+def push_crm_sync(
+    client_id: int = Form(...),
+    full_name: str = Form(""),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+    email: str = Form(""),
+    phone: str = Form(""),
+    company: str = Form(""),
+    source: str = Form(""),
+    notes: str = Form(""),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("sales", "ops")),
+):
+    fields = {
+        "full_name": full_name, "first_name": first_name, "last_name": last_name,
+        "email": email, "phone": phone, "company": company, "source": source, "notes": notes,
+    }
+    crm_sync.push_to_crm(db, client_id, fields, created_by_user_id=user.id)
+    return RedirectResponse("/crm-sync", status_code=303)
 
 
 # --- Scanner -----------------------------------------------------------------

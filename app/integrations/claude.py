@@ -428,6 +428,31 @@ class ClaudeDrafter:
         )
         return "".join(block.text for block in resp.content if block.type == "text")
 
+    def parse_lead_details(self, raw_text: str) -> dict[str, str]:
+        """Charon: turn arbitrary pasted text (an email, a form dump, call
+        notes) into structured CRM contact fields. Never invents a value —
+        a field that isn't actually in the text comes back empty."""
+        system = (
+            "Extract contact details for a CRM record from this pasted text — it "
+            "could be an email, a web form submission, or call notes. "
+            'Respond with ONLY JSON: {"full_name": "...", "first_name": "...", '
+            '"last_name": "...", "email": "...", "phone": "...", "company": "...", '
+            '"source": "...", "notes": "one or two sentence summary of what they need"}. '
+            "Leave a field as an empty string if it genuinely isn't present in the "
+            "text — never invent or guess a value."
+        )
+        data = self._complete_json(system, raw_text, max_tokens=512)
+        return {
+            "full_name": data.get("full_name", ""),
+            "first_name": data.get("first_name", ""),
+            "last_name": data.get("last_name", ""),
+            "email": data.get("email", ""),
+            "phone": data.get("phone", ""),
+            "company": data.get("company", ""),
+            "source": data.get("source", ""),
+            "notes": data.get("notes", ""),
+        }
+
     def draft_followup(self, lead: dict[str, Any], profile: BusinessProfile) -> dict[str, str]:
         system = (
             "Write a brief, low-pressure follow-up to a cold email that got no "

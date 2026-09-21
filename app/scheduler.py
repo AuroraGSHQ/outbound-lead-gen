@@ -46,6 +46,8 @@ from app.services import (
     system_health,
     winback,
 )
+# crm_sync (Charon) is on-demand only — no scheduled job — so it is not
+# imported here; see AGENT_JOBS below for its roster entry.
 
 logger = logging.getLogger(__name__)
 
@@ -410,6 +412,13 @@ AGENT_JOBS = [
         "role": "System health",
         "description": "Checks configuration completeness, dependency drift, and whether every other agent's last run actually succeeded — alerts immediately, not just in a digest.",
         "job_id": "system_health_check",
+    },
+    {
+        "key": "charon",
+        "name": "Charon",
+        "role": "CRM handoff",
+        "description": "On-demand: paste in a lead or client's details and Charon extracts the contact fields and pushes them straight into that client's own CRM (HubSpot, Monday.com, GoHighLevel).",
+        "job_id": None,
     },
 ]
 

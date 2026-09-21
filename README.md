@@ -98,7 +98,7 @@ prompt but a phone needs a reachable HTTPS URL.
 
 ## The AI team
 
-Twenty-three agents, named after Greek gods, each backed by a real scheduled
+Twenty-four agents, named after Greek gods, each backed by a real scheduled
 job (`app/scheduler.py`) or run on-demand — see them, their cadence, and
 their last-run status on the **Team** page once the app is running. Every
 agent that could produce something client-facing (an email, an ad, outreach
@@ -134,8 +134,9 @@ turned back on. Nothing it already produced gets deleted.
 | **Astraea** | Logs a competitor's pricing, checks it against Aurora's own | new |
 | **Chronos** | A once-a-month ops rollup — what's aging, by category | new |
 | **Hephaestus** | Checks config, dependency drift, and every agent's last run; alerts immediately when something's actually broken | new |
+| **Charon** | On-demand: paste in a lead's details, get them pushed straight into that client's own CRM (HubSpot, Monday.com, GoHighLevel) | new |
 
-### How 23 agents avoid stepping on each other
+### How 24 agents avoid stepping on each other
 
 Four rules, enforced in the code rather than just documented:
 

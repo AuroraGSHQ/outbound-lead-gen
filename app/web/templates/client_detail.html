@@ -24,6 +24,47 @@
   </form>
 </div>
 
+<h2>CRM connection — Charon</h2>
+<div class="card">
+  <p class="meta">Currently: <strong>{{ client.crm_provider }}</strong>{% if client.crm_provider != 'none' %} — leads pasted on the <a href="/crm-sync">CRM Sync</a> page for this client push here.{% endif %}</p>
+  <form method="post" action="/clients/{{ client.id }}/crm-config">
+    <p><label>Provider<br>
+      <select name="crm_provider">
+        {% for p in ["none", "hubspot", "monday", "highlevel", "other"] %}
+        <option value="{{ p }}" {{ "selected" if client.crm_provider == p }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>API key <span class="meta">(leave blank to keep the one already saved)</span><br>
+      <input type="password" name="crm_api_key" placeholder="{{ '••••••••' if client.crm_api_key else '' }}">
+    </label></p>
+    <p><label>Board ID <span class="meta">(Monday.com only)</span><br>
+      <input type="text" name="crm_board_id" value="{{ client.crm_config.board_id if client.crm_config else '' }}">
+    </label></p>
+    <p><label>Location ID <span class="meta">(GoHighLevel only)</span><br>
+      <input type="text" name="crm_location_id" value="{{ client.crm_config.location_id if client.crm_config else '' }}">
+    </label></p>
+    <p><label>Column map <span class="meta">(Monday.com only — JSON, e.g. {"email": "email_col_id"})</span><br>
+      <textarea name="crm_column_map" style="min-height:70px;">{{ (client.crm_config.column_map | tojson) if client.crm_config and client.crm_config.column_map else '' }}</textarea>
+    </label></p>
+    <button type="submit" class="secondary">Save CRM connection</button>
+  </form>
+</div>
+
+{% if crm_logs %}
+<h3>Recent CRM syncs</h3>
+<table>
+  <tr><th>When</th><th>Contact</th><th>Status</th></tr>
+  {% for log in crm_logs %}
+  <tr>
+    <td>{{ log.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+    <td>{{ log.contact_summary }}</td>
+    <td><span class="badge {{ 'done' if log.status == 'success' else 'unverified' }}">{{ log.status }}</span>{% if log.status == 'error' %} — {{ log.message }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 <h2>Action items</h2>
 {% for item in action_items %}
 <div class="card">

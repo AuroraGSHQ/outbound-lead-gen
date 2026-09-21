@@ -186,6 +186,15 @@ class Client(Base):
     start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     referral_source: Mapped[str] = mapped_column(String(255), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
+
+    # Charon (CRM handoff) — this client's own CRM connection. Every client
+    # can run a different platform, so this lives per-Client, not globally.
+    crm_provider: Mapped[str] = mapped_column(String(50), default="none")
+    crm_api_key: Mapped[str] = mapped_column(Text, default="")
+    # Provider-specific extras: Monday needs {"board_id": "...", "column_map":
+    # {"email": "<column id>", ...}}; GoHighLevel needs {"location_id": "..."}.
+    crm_config: Mapped[dict] = mapped_column(JSON, default=dict)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
@@ -460,6 +469,38 @@ class CompetitorNote(Base):
     analysis: Mapped[str] = mapped_column(Text, default="")
     logged_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class CrmProvider(str, enum.Enum):
+    NONE = "none"
+    HUBSPOT = "hubspot"
+    MONDAY = "monday"
+    HIGHLEVEL = "highlevel"
+    OTHER = "other"
+
+
+class CrmSyncStatus(str, enum.Enum):
+    SUCCESS = "success"
+    ERROR = "error"
+
+
+class CrmSyncLog(Base):
+    """Charon's audit trail: one row per attempted push into a client's CRM,
+    success or failure, so a bad push is visible rather than silently lost."""
+
+    __tablename__ = "crm_sync_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(50))
+    status: Mapped[str] = mapped_column(String(20))
+    contact_summary: Mapped[str] = mapped_column(String(255), default="")
+    message: Mapped[str] = mapped_column(Text, default="")
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    client: Mapped["Client"] = relationship()
+    created_by: Mapped["User | None"] = relationship()
 
 
 class MetricSnapshot(Base):
