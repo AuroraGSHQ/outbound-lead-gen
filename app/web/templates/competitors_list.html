@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Competitor watch — Eclipse &amp; Parallax</h1>
+<p class="meta">No ad-library or pricing-scraper API is wired in — log what you saw (an ad, a pricing page), and it gets run through the manual's own "cover your logo" differentiation test.</p>
+
+<div class="card" style="max-width: 560px;">
+  <form method="post" action="/competitors/new">
+    <p><label>Competitor name<br><input type="text" name="competitor_name" required style="width:100%;"></label></p>
+    <p><label>Type<br>
+      <select name="note_type">
+        {% for t in note_types %}<option value="{{ t }}">{{ "Ad (Eclipse)" if t == "ad" else "Pricing (Parallax)" }}</option>{% endfor %}
+      </select>
+    </label></p>
+    <p><label>Source URL<br><input type="text" name="source_url" style="width:100%;"></label></p>
+    <p><label>What you observed<br><textarea name="observed_text" required></textarea></label></p>
+    <button type="submit">Log &amp; analyze</button>
+  </form>
+</div>
+
+{% for n in notes %}
+<div class="card">
+  <span class="meta">{{ n.created_at.strftime("%Y-%m-%d") }} — {{ "Eclipse (ad)" if n.note_type == "ad" else "Parallax (pricing)" }}</span>
+  <p><strong>{{ n.competitor_name }}</strong>{% if n.source_url %} — <a href="{{ n.source_url }}">{{ n.source_url }}</a>{% endif %}</p>
+  <p class="meta">{{ n.observed_text }}</p>
+  <p>{{ n.analysis }}</p>
+</div>
+{% else %}
+<p>Nothing logged yet.</p>
+{% endfor %}
+{% endblock %}

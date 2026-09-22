@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>New client intake</h1>
+<p class="meta">Paste or type your notes from the discovery/intro call. The Horizon agent will extract a structured client picture and generate an action plan — some steps run automatically (safely — anything client-facing still queues for your approval), the rest become checklist items on the Actions board.</p>
+
+<div class="card">
+  <form method="post" action="/intake/new">
+    {% if lead %}
+      <input type="hidden" name="lead_id" value="{{ lead.id }}">
+      <p><strong>Prospect:</strong> {{ lead.contact_name }} ({{ lead.contact_title }}) at {{ lead.company_name }} &lt;{{ lead.contact_email }}&gt;</p>
+    {% else %}
+      <input type="hidden" name="lead_id" value="0">
+      <p class="meta">No existing lead selected — <a href="/leads">search for one</a>, or fill in a new prospect below.</p>
+      <p><label>Company name<br><input type="text" name="company_name" style="width:100%;"></label></p>
+      <p><label>Contact name<br><input type="text" name="contact_name" style="width:100%;"></label></p>
+      <p><label>Contact title<br><input type="text" name="contact_title" style="width:100%;"></label></p>
+      <p><label>Contact email<br><input type="email" name="contact_email" style="width:100%;"></label></p>
+    {% endif %}
+    <p><label>Call notes<br>
+      <textarea name="raw_notes" placeholder="Pain points, goals, budget signals, decision maker, timeline, objections..." required></textarea>
+    </label></p>
+    <button type="submit">Analyze &amp; generate action plan</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ client.company_name }}</h1>
+<div class="card">
+  <p>Contact: {{ client.contact_name }} &lt;{{ client.contact_email }}&gt;</p>
+  <form method="post" action="/clients/{{ client.id }}/update">
+    <p><label>Status<br>
+      <select name="status">
+        {% for s in ["prospect", "active", "paused", "churned"] %}
+        <option value="{{ s }}" {{ "selected" if client.status == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>Tier<br><input type="text" name="tier" value="{{ client.tier }}"></label></p>
+    <p><label>Monthly fee<br><input type="number" step="0.01" name="monthly_fee" value="{{ client.monthly_fee }}"></label></p>
+    <p><label>Start date (sets the 90-day referral-review clock)<br>
+      <input type="date" name="start_date" value="{{ client.start_date.strftime('%Y-%m-%d') if client.start_date else '' }}">
+    </label></p>
+    <button type="submit">Save</button>
+  </form>
+  <p class="meta">{{ client.notes }}</p>
+  <form method="post" action="/clients/{{ client.id }}/proposal">
+    <button type="submit" class="secondary">Axis: generate proposal</button>
+  </form>
+</div>
+
+<h2>CRM connection — Wormhole</h2>
+<div class="card">
+  <p class="meta">Currently: <strong>{{ client.crm_provider }}</strong>{% if client.crm_provider != 'none' %} — leads pasted on the <a href="/crm-sync">CRM Sync</a> page for this client push here.{% endif %}</p>
+  <form method="post" action="/clients/{{ client.id }}/crm-config">
+    <p><label>Provider<br>
+      <select name="crm_provider">
+        {% for p in ["none", "hubspot", "monday", "highlevel", "other"] %}
+        <option value="{{ p }}" {{ "selected" if client.crm_provider == p }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>API key <span class="meta">(leave blank to keep the one already saved)</span><br>
+      <input type="password" name="crm_api_key" placeholder="{{ '••••••••' if client.crm_api_key else '' }}">
+    </label></p>
+    <p><label>Board ID <span class="meta">(Monday.com only)</span><br>
+      <input type="text" name="crm_board_id" value="{{ client.crm_config.board_id if client.crm_config else '' }}">
+    </label></p>
+    <p><label>Location ID <span class="meta">(GoHighLevel only)</span><br>
+      <input type="text" name="crm_location_id" value="{{ client.crm_config.location_id if client.crm_config else '' }}">
+    </label></p>
+    <p><label>Column map <span class="meta">(Monday.com only — JSON, e.g. {"email": "email_col_id"})</span><br>
+      <textarea name="crm_column_map" style="min-height:70px;">{{ (client.crm_config.column_map | tojson) if client.crm_config and client.crm_config.column_map else '' }}</textarea>
+    </label></p>
+    <button type="submit" class="secondary">Save CRM connection</button>
+  </form>
+</div>
+
+{% if crm_logs %}
+<h3>Recent CRM syncs</h3>
+<table>
+  <tr><th>When</th><th>Contact</th><th>Status</th></tr>
+  {% for log in crm_logs %}
+  <tr>
+    <td>{{ log.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+    <td>{{ log.contact_summary }}</td>
+    <td><span class="badge {{ 'done' if log.status == 'success' else 'unverified' }}">{{ log.status }}</span>{% if log.status == 'error' %} — {{ log.message }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Action items</h2>
+{% for item in action_items %}
+<div class="card">
+  <span class="badge {{ 'done' if item.status == 'done' else 'open' }}">{{ item.status }}</span>
+  <strong>{{ item.title }}</strong> — {{ item.category }}
+</div>
+{% else %}<p>None yet.</p>{% endfor %}
+
+<h2>Referrals</h2>
+{% for r in referrals %}
+<div class="card">{{ r.referrer_name }} → {{ r.referred_name }} — <span class="badge open">{{ r.status }}</span></div>
+{% else %}<p>None logged yet — see the <a href="/referrals">Referrals page</a> once the 90-day review is due.</p>{% endfor %}
+{% endblock %}

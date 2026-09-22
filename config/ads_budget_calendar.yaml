@@ -1,0 +1,55 @@
+# Quarterly ad budget & platform allocation, from the Acquisition Manual §14.
+# Edit this as your real plan changes quarter to quarter — the Orbit agent
+# (app/services/ads.py) reads whichever entry matches the current quarter to
+# generate that month's campaign brief. Keys under `allocation` become
+# platform names on the generated AdCampaign rows.
+
+quarters:
+  "2026-Q4":
+    monthly_spend_range: "$0 to $500"
+    allocation:
+      testing_only: "100%"
+    focus: >
+      Build the scanner and case studies. Do not buy ads before the offer is
+      proven on real clients.
+
+  "2027-Q1":
+    monthly_spend_range: "$1,500 to $2,500"
+    allocation:
+      google_search: "75%"
+      meta_retargeting: "25%"
+    focus: "Prove cost per qualified conversation on search before adding anything."
+
+  "2027-Q2":
+    monthly_spend_range: "$3,000 to $4,000"
+    allocation:
+      google_search: "60%"
+      meta: "25%"
+      youtube_retargeting: "10%"
+      microsoft: "5%"
+    focus: "Scale what works. Add Microsoft for cheap incremental volume."
+
+  "2027-Q3":
+    monthly_spend_range: "$4,500 to $6,000"
+    allocation:
+      google_search: "55%"
+      meta: "25%"
+      youtube: "10%"
+      enterprise_test: "10%"
+    focus: "First enterprise paid test, only if two Command clients are closed."
+
+  "2027-Q4":
+    monthly_spend_range: "$6,000 to $8,000"
+    allocation:
+      google_search: "55%"
+      meta: "25%"
+      youtube: "10%"
+      enterprise: "10%"
+    focus: "Same allocation, plus benchmark-report promotion. Report-led enterprise push."
+
+cut_order:
+  - "Enterprise paid media — slowest to pay back."
+  - "YouTube and Microsoft — supporting channels."
+  - "Meta prospecting — keep only retargeting, which is cheap and converts."
+  - "Google Search — down to brand and the two best-performing keyword groups."
+  - "Never cut: outbound tooling, the scanner, or time on referrals and operator rooms."

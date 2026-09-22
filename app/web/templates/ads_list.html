@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ads planner</h1>
+<p class="meta">Generates the monthly campaign brief from <code>config/ads_budget_calendar.yaml</code> and <code>config/ad_targeting.yaml</code> (manual §4/§6/§14). Publishing to Google/Meta stays a manual step until real API access is configured — see docs/SETUP.md.</p>
+<form method="post" action="/ads/generate">
+  <button type="submit">Generate this quarter's brief now</button>
+</form>
+
+<table>
+  <tr><th>Quarter</th><th>Platform</th><th>Status</th><th>Budget/mo</th></tr>
+  {% for c in campaigns %}
+  <tr>
+    <td>{{ c.quarter_label }}</td>
+    <td><a href="/ads/{{ c.id }}">{{ c.platform }}</a></td>
+    <td>{{ c.status }}</td>
+    <td>{{ c.budget_monthly }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">No campaign briefs yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

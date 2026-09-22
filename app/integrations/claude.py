@@ -48,6 +48,44 @@ class ClaudeDrafter:
         text = "".join(block.text for block in resp.content if block.type == "text")
         return _extract_json(text)
 
+    def draft_sms_first_touch(self, lead: dict[str, Any], profile: BusinessProfile) -> str:
+        system = (
+            "Write a short first-touch SMS to a business prospect — under 300 characters. "
+            "Plain, direct, no emoji, no hype. One reason this specific recipient might care "
+            "and a clear way to say yes (reply, or book a time). Must read like a real person "
+            "texting, not a marketing blast. Sign off with just a first name — do not add an "
+            "opt-out line or company name, those are appended separately by the app. "
+            'Respond with ONLY JSON: {"body": "..."}.'
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Sender: {profile.sender_name}. Booking link: {profile.calendly_link}"
+        )
+        data = self._complete_json(system, user, max_tokens=256)
+        return data.get("body", "")
+
+    def draft_call_script(self, lead: dict[str, Any], profile: BusinessProfile) -> str:
+        system = (
+            "Write a short spoken script for a one-way outbound voice message (like a "
+            "personalized voicemail drop, not a live conversation) — 20 to 30 seconds when "
+            "read aloud at a natural pace (roughly 55-75 words). Conversational, warm, "
+            "specific to this recipient, one clear reason to call back or book a time. No "
+            "corporate phrasing, no reading-out-loud awkwardness — write it the way a person "
+            "actually talks, with natural pauses (use periods/commas, not stage directions). "
+            "End by saying the booking link or asking them to call back. "
+            'Respond with ONLY JSON: {"script": "..."}.'
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Sender: {profile.sender_name}, {profile.sender_title}. Booking link: {profile.calendly_link}"
+        )
+        data = self._complete_json(system, user, max_tokens=256)
+        return data.get("script", "")
+
     def draft_first_touch_email(
         self, lead: dict[str, Any], profile: BusinessProfile
     ) -> dict[str, str]:
@@ -112,6 +150,347 @@ class ClaudeDrafter:
         data = self._complete_json(system, user)
         return {"body": data.get("body", "")}
 
+    def draft_fault_led_email(
+        self, lead: dict[str, Any], faults: list[str], profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Manual §9 Sequence A: opens with a specific, verified fault, not a
+        pitch. Only ever call this with faults a human has ticked `verified`
+        on a ScanResult — see app/services/scanner.py."""
+        system = (
+            "You write the opening email of a fault-led outbound sequence, in the "
+            "style of an operator who noticed something, not a vendor pitching. "
+            "Lead with the single most specific verified fault. State it plainly, "
+            "no hedging language, no exclamation points. Explicitly say you're not "
+            "selling anything yet. One line connecting it to the sender's own "
+            "operator experience if relevant. End with a low-pressure ask for a "
+            "short conversation. Under 90 words. "
+            'Respond with ONLY JSON: {"subject": "...", "body": "..."}. The body '
+            "must NOT include a greeting salutation line or sign-off."
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')} at {lead.get('company_name')} "
+            f"({lead.get('industry')}, {lead.get('location')}).\n"
+            f"Verified faults found on their site/funnel: {'; '.join(faults)}\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Ask: a quick reply, or a 15-minute call ({profile.calendly_link})."
+        )
+        data = self._complete_json(system, user)
+        return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def draft_operator_led_email(
+        self, lead: dict[str, Any], profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Manual §9 Sequence B: for prospects the scanner found nothing
+        wrong with. Leads with operator credibility instead of a fault."""
+        system = (
+            "You write the opening email of an operator-to-operator outbound "
+            "message: one business owner writing to another, not a marketer "
+            "pitching an agency. Establish operator credibility in one line, "
+            "state plainly what was built and why, explicitly say this isn't a "
+            "pitch, and offer to walk them through it in fifteen minutes. "
+            "Under 90 words. "
+            'Respond with ONLY JSON: {"subject": "...", "body": "..."}. No '
+            "greeting salutation line or sign-off."
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')} at {lead.get('company_name')} "
+            f"({lead.get('industry')}, {lead.get('location')}).\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Ask: a 15-minute call ({profile.calendly_link})."
+        )
+        data = self._complete_json(system, user)
+        return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def draft_enterprise_touch(
+        self, lead: dict[str, Any], benchmark_summary: str, profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Manual §9 Sequence C / §13: slower, benchmark-led, never sent at
+        volume. Leads with data, not a pitch."""
+        system = (
+            "You write a single benchmark-led outreach email to a director/VP-level "
+            "enterprise or franchise contact. Open with the category benchmark data "
+            "point, offer to share the segment breakdown with no strings attached, "
+            "and make clear it's useful whether or not they ever work together. No "
+            "hard sell. Under 100 words. "
+            'Respond with ONLY JSON: {"subject": "...", "body": "..."}. No '
+            "greeting salutation line or sign-off."
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')}.\n"
+            f"Benchmark data available: {benchmark_summary}\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}"
+        )
+        data = self._complete_json(system, user)
+        return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def analyze_intro_call(
+        self, notes: str, lead: dict[str, Any], profile: BusinessProfile
+    ) -> dict[str, Any]:
+        """The Horizon agent's core call: turn raw discovery-call notes into
+        a structured client picture plus a concrete next-steps plan.
+
+        Each next step names a `handler` key. `auto_executable=true` only
+        means "a handler exists" — client-facing handlers still land in the
+        existing approval queue rather than sending on their own. Handlers
+        the model may propose: schedule_90day_review_reminder,
+        draft_proposal_email, run_scanner_scan, draft_welcome_email,
+        add_to_referral_program, human_review (fallback for anything with no
+        automated handler — always auto_executable=false)."""
+        system = (
+            "You are an operations analyst at a home-services growth agency, "
+            "turning raw notes from a just-finished discovery call into a "
+            "structured client record and a concrete action plan for the team.\n\n"
+            "Respond with ONLY JSON in this shape:\n"
+            "{\n"
+            '  "company_snapshot": "1-2 sentences",\n'
+            '  "pain_points": ["..."],\n'
+            '  "goals": ["..."],\n'
+            '  "budget_signal": "what they indicated about budget, or \'not discussed\'",\n'
+            '  "decision_maker": "name/role, or \'unclear\'",\n'
+            '  "timeline": "urgency/timeline signal",\n'
+            '  "recommended_tier": "your recommendation given what was discussed",\n'
+            '  "objections": ["..."],\n'
+            '  "next_steps": [\n'
+            "    {\n"
+            '      "title": "short imperative title",\n'
+            '      "description": "1-2 sentences",\n'
+            '      "category": one of ["intake_followup","outreach","scanner_verify","referral","ads","content","admin"],\n'
+            '      "handler": one of ["schedule_90day_review_reminder","draft_proposal_email","draft_proposal_document","run_scanner_scan","draft_welcome_email","add_to_referral_program","human_review"],\n'
+            '      "auto_executable": true or false,\n'
+            '      "payload_hint": "one sentence on what the handler needs to know"\n'
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "Propose 3-6 next steps. Never mark handler=human_review as "
+            "auto_executable=true. Base every field only on what's actually in "
+            "the notes — write \"not discussed\" rather than inventing detail."
+        )
+        user = (
+            f"Prospect: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n\n"
+            f"Call notes:\n{notes}"
+        )
+        return self._complete_json(system, user, max_tokens=2048)
+
+    def draft_referral_ask(
+        self, client: dict[str, Any], case_study_numbers: str, profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Manual §11: the 90-day-review ask script plus a ready-to-forward
+        introduction message, written for the specific client."""
+        system = (
+            "Write two short pieces of referral-engine copy for a client's "
+            "90-day review, in the plain, non-salesy voice of an operator "
+            "talking to another business owner:\n"
+            "1. ask_script: what to say out loud, asking for two names of "
+            "operators dealing with the same problem the client had before "
+            "signing up.\n"
+            "2. forwardable_message: a short message the client can literally "
+            "forward as-is to introduce the referred business, citing the "
+            "client's own real result.\n"
+            'Respond with ONLY JSON: {"ask_script": "...", "forwardable_message": "..."}'
+        )
+        user = (
+            f"Client: {client.get('company_name')}, contact {client.get('contact_name')}.\n"
+            f"Their result so far: {case_study_numbers}\n"
+            f"My business: {profile.business_name}. {profile.business_pitch}\n"
+            f"Sender: {profile.sender_name}"
+        )
+        data = self._complete_json(system, user)
+        return {
+            "ask_script": data.get("ask_script", ""),
+            "forwardable_message": data.get("forwardable_message", ""),
+        }
+
+    def draft_ad_copy(
+        self, platform: str, angle: str, segment: str, profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Manual §6: one ad unit (headline + body) for a given platform and
+        creative angle, aimed at a given audience segment."""
+        system = (
+            "Write one piece of ad creative for the given platform and angle. "
+            "Follow the manual's rule: cover the logo test — a competitor "
+            "couldn't paste their name over this and have it still make sense. "
+            "Carry at least two of: the specific mechanism, a specific number, "
+            "operator credibility, the guarantee. No generic agency language "
+            "('full-service', 'results-driven', 'data-driven', 'ROI-focused', "
+            "'tailored solutions', etc.). "
+            'Respond with ONLY JSON: {"headline": "...", "body": "..."}'
+        )
+        user = (
+            f"Platform: {platform}\nAngle: {angle}\nAudience segment: {segment}\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}\n"
+            f"Sender operator story: {profile.sender_name}, {profile.sender_title}"
+        )
+        data = self._complete_json(system, user, max_tokens=512)
+        return {"headline": data.get("headline", ""), "body": data.get("body", "")}
+
+    def draft_content_extract(self, metrics_summary: str, profile: BusinessProfile) -> str:
+        """Manual §12: a quarterly benchmark-report extract drafted from real
+        aggregated metrics. Honesty over polish — the model is told to say so
+        plainly when the sample is small."""
+        system = (
+            "Write a short quarterly benchmark-report extract (under 300 words, "
+            "markdown, one page) for a home-services growth agency to publish. "
+            "State the sample size honestly. If a finding is uncomfortable, "
+            "include it anyway rather than only publishing flattering numbers. "
+            "No hype language. Respond with markdown only, no JSON, no code fence."
+        )
+        user = f"Aggregated metrics this quarter:\n{metrics_summary}\n\nPublisher: {profile.business_name}"
+        resp = self._client.messages.create(
+            model=self._model,
+            max_tokens=1024,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_client_email(
+        self, purpose: str, lead: dict[str, Any], context: str, profile: BusinessProfile
+    ) -> dict[str, str]:
+        """General-purpose short client email for intake-plan handlers, e.g.
+        purpose='proposal follow-up' or purpose='welcome / onboarding'."""
+        system = (
+            f"Write a short, specific {purpose} email from a real business owner to a "
+            "prospect/client they've already spoken with. No hype, no generic agency "
+            "language, reads like a person wrote it. Under 130 words. "
+            'Respond with ONLY JSON: {"subject": "...", "body": "..."}. No greeting '
+            "salutation line or sign-off."
+        )
+        user = (
+            f"Recipient: {lead.get('contact_name')} at {lead.get('company_name')}.\n"
+            f"Context from the call: {context}\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}"
+        )
+        data = self._complete_json(system, user)
+        return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def draft_case_study(self, client: dict[str, Any], metrics_summary: str, profile: BusinessProfile) -> str:
+        """Zenith: a case-study draft from one client's real before/after
+        numbers — manual §1's top item in the hierarchy of persuasion."""
+        system = (
+            "Write a short case study (under 350 words, markdown) for one client: "
+            "named business, specific before/after numbers, what changed and why. "
+            "No hype language. If a number is missing, say so rather than inventing "
+            "one. Respond with markdown only, no JSON, no code fence."
+        )
+        user = (
+            f"Client: {client.get('company_name')}. Tier: {client.get('tier', 'n/a')}.\n"
+            f"Metrics: {metrics_summary}\n\nPublisher: {profile.business_name}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=768, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_proposal_document(
+        self, client: dict[str, Any], tier: str, context: str, profile: BusinessProfile
+    ) -> str:
+        """Axis: a structured proposal — scope, price, the booked-job-floor
+        guarantee (manual §2's risk-reversal layer) — from the intake plan."""
+        system = (
+            "Write a short client proposal (under 400 words, markdown) with these "
+            "sections: Scope, Price, Guarantee, Next steps. Plain language, no "
+            "generic agency phrases. State the guarantee plainly with its "
+            "conditions. Respond with markdown only, no JSON, no code fence."
+        )
+        user = (
+            f"Client: {client.get('company_name')}, contact {client.get('contact_name')}.\n"
+            f"Recommended tier: {tier}\nContext from intake: {context}\n\n"
+            f"My business: {profile.business_name}. {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=768, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_review_response(self, review_text: str, rating: str, profile: BusinessProfile) -> str:
+        """Radiance: a public reply to a review, ready to paste into Google/
+        Facebook by hand (no review-platform API is wired up)."""
+        system = (
+            "Write a short public reply to this customer review, in the voice of "
+            "the business owner. Thank them specifically (reference something real "
+            "in their review), address any concern plainly, no corporate tone. "
+            "Under 80 words. Respond with plain text only, no JSON, no quotes."
+        )
+        user = f"Rating: {rating}\nReview: {review_text}\n\nBusiness: {profile.business_name}"
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=256, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text").strip()
+
+    def draft_competitor_analysis(
+        self, competitor_name: str, observed_text: str, note_type: str, profile: BusinessProfile
+    ) -> str:
+        """Eclipse / Parallax: run a logged competitor observation through the
+        manual's own differentiation test ('cover your logo')."""
+        system = (
+            "You're checking a competitor's ad or pricing against the 'cover your "
+            "logo' test: could a competitor swap their name onto our own material "
+            "without changing a word? In under 120 words, note what's actually "
+            "distinctive about what we observed, and one concrete way our own "
+            "positioning should differ or hold firm. No hedging, no filler. "
+            "Respond with plain text only."
+        )
+        user = (
+            f"Competitor: {competitor_name}\nType: {note_type}\nObserved: {observed_text}\n\n"
+            f"Our business: {profile.business_name}. {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=384, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text").strip()
+
+    def draft_meeting_brief(
+        self, lead: dict[str, Any], site_findings: str, profile: BusinessProfile
+    ) -> str:
+        """Telescope: a one-page pre-call brief so whoever's on the discovery
+        call walks in already knowing the shape of the business."""
+        system = (
+            "Write a one-page pre-call brief (under 300 words, markdown) for "
+            "someone about to have a discovery call with this prospect: likely "
+            "pain points, a specific observation to open with, and two questions "
+            "worth asking. Grounded only in what's given — say 'unknown' rather "
+            "than guessing specifics you don't have. Respond with markdown only, "
+            "no JSON, no code fence."
+        )
+        user = (
+            f"Prospect: {lead.get('contact_name')}, {lead.get('contact_title')} at "
+            f"{lead.get('company_name')} ({lead.get('industry')}, {lead.get('location')}).\n"
+            f"What we found on their site: {site_findings}\n\n"
+            f"My business: {profile.business_name}. {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=512, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def parse_lead_details(self, raw_text: str) -> dict[str, str]:
+        """Wormhole: turn arbitrary pasted text (an email, a form dump, call
+        notes) into structured CRM contact fields. Never invents a value —
+        a field that isn't actually in the text comes back empty."""
+        system = (
+            "Extract contact details for a CRM record from this pasted text — it "
+            "could be an email, a web form submission, or call notes. "
+            'Respond with ONLY JSON: {"full_name": "...", "first_name": "...", '
+            '"last_name": "...", "email": "...", "phone": "...", "company": "...", '
+            '"source": "...", "notes": "one or two sentence summary of what they need"}. '
+            "Leave a field as an empty string if it genuinely isn't present in the "
+            "text — never invent or guess a value."
+        )
+        data = self._complete_json(system, raw_text, max_tokens=512)
+        return {
+            "full_name": data.get("full_name", ""),
+            "first_name": data.get("first_name", ""),
+            "last_name": data.get("last_name", ""),
+            "email": data.get("email", ""),
+            "phone": data.get("phone", ""),
+            "company": data.get("company", ""),
+            "source": data.get("source", ""),
+            "notes": data.get("notes", ""),
+        }
+
     def draft_followup(self, lead: dict[str, Any], profile: BusinessProfile) -> dict[str, str]:
         system = (
             "Write a brief, low-pressure follow-up to a cold email that got no "
@@ -126,3 +505,80 @@ class ClaudeDrafter:
         )
         data = self._complete_json(system, user)
         return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def draft_social_caption(
+        self, client: dict[str, Any], context: str, platform: str, profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Pulsar: an organic social post drafted from a client's own real
+        result or a recent campaign — not paid ad copy (that's Orbit's
+        draft_ad_copy), and queued for approval the same way outreach is."""
+        system = (
+            f"Write one organic {platform} post for a home-services growth agency to "
+            "post on its own account, built around a specific, real result. Plain "
+            "language, no hashtag spam (at most 2-3 relevant ones), no generic agency "
+            "language. Under 150 words. "
+            'Respond with ONLY JSON: {"caption": "..."}.'
+        )
+        user = (
+            f"What to feature: {client.get('company_name', 'a client')}.\n"
+            f"Context/result: {context}\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}"
+        )
+        data = self._complete_json(system, user, max_tokens=512)
+        return {"caption": data.get("caption", "")}
+
+    def draft_longform_content(self, topic: str, context: str, profile: BusinessProfile) -> str:
+        """Nebula: a blog post / newsletter section — distinct from Observatory's
+        quarterly benchmark-report extract (draft_content_extract), which is
+        strictly metrics-grounded. This can be built from a case study, a
+        theme, or general context."""
+        system = (
+            "Write a short blog post or newsletter section (under 500 words, "
+            "markdown, with a heading) for a home-services growth agency's own "
+            "site/newsletter. Specific and useful over promotional. No generic "
+            "agency language ('full-service', 'results-driven', 'tailored "
+            "solutions'). Respond with markdown only, no JSON, no code fence."
+        )
+        user = f"Topic: {topic}\nContext to draw on: {context}\n\nPublisher: {profile.business_name}. {profile.business_pitch}"
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=1024, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_production_brief(self, campaign: dict[str, Any], profile: BusinessProfile) -> str:
+        """Apollo: a shot list / production checklist for the video or photo
+        content a campaign needs — not the ad copy itself (that's already on
+        the AdCampaign row), just what has to get filmed/shot and delivered."""
+        system = (
+            "Write a short production brief (under 250 words, markdown) for the "
+            "video/photo content a marketing campaign needs: a shot list (bulleted), "
+            "a deliverables list (formats/lengths/aspect ratios), and anything the "
+            "crew needs to know before the shoot. Plain and concrete, no filler. "
+            "Respond with markdown only, no JSON, no code fence."
+        )
+        user = (
+            f"Platform: {campaign.get('platform')}\nCampaign angle/creative: {campaign.get('creative')}\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=512, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_brand_review(self, client: dict[str, Any], brand_notes: str, profile: BusinessProfile) -> str:
+        """Starlight: a lightweight brand-consistency review — voice and
+        asset consistency against what's on file for the client, not a full
+        brand audit engagement."""
+        system = (
+            "You're reviewing a client's brand voice/asset consistency for a growth "
+            "agency's internal use. In under 150 words, note anything inconsistent "
+            "(tone, visual identity, messaging) across what's described, and one "
+            "concrete fix. If there isn't enough information to say anything useful, "
+            "say that plainly instead of inventing findings. Respond with plain text "
+            "only."
+        )
+        user = f"Client: {client.get('company_name')}.\nWhat we have on file: {brand_notes}\n\nOur business: {profile.business_name}"
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=384, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text").strip()

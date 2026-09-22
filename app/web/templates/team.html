@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Your AI team</h1>
+<p class="meta">Thirty-one agents, each backed by a real scheduled job (or run on-demand where noted) — not a marketing claim. Client-facing output from any of them still queues in Approvals before it goes out. Turn one off and its scheduled job skips itself (and gets logged as skipped) until you turn it back on.</p>
+{% for a in agents %}
+<div class="card">
+  <div class="agent-role">{{ a.role }}</div>
+  <h3 style="margin: 2px 0;">{{ a.name }} <span class="badge {{ 'done' if a.enabled else 'open' }}">{{ 'on' if a.enabled else 'off' }}</span></h3>
+  <p>{{ a.description }}</p>
+  {% if a.job_id %}
+    <p class="meta">Next run: {{ a.next_run.strftime("%Y-%m-%d %H:%M UTC") if a.next_run else "not scheduled" }}</p>
+  {% else %}
+    <p class="meta">Runs on-demand.</p>
+  {% endif %}
+  {% if user.role == 'owner' %}
+  <form method="post" action="/team/{{ a.key }}/toggle" style="display:inline;">
+    <input type="hidden" name="enabled" value="{{ 'off' if a.enabled else 'on' }}">
+    <button type="submit" class="secondary">{{ 'Turn off' if a.enabled else 'Turn on' }}</button>
+  </form>
+  {% if a.job_id and a.enabled %}
+  <form method="post" action="/team/{{ a.key }}/run-now" style="display:inline;">
+    <button type="submit" class="secondary">Run now</button>
+  </form>
+  {% endif %}
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

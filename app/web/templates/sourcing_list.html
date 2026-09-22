@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Sourcing requests</h1>
+<p class="meta">Voyager uses Apollo.io automatically every morning. For Vibe Prospecting (richer targeting — intent signals, tech stack, job-change events) a person has to run it, because Explorium requires confirming the cost before every export. Describe what you need below, get a ready-to-paste prompt, run it in a Vibe-Prospecting-enabled Claude session, then import the CSV it exports.</p>
+<p><a href="/sourcing/new">+ New sourcing request</a></p>
+
+<table>
+  <tr><th>Requested</th><th>Criteria</th><th>Status</th><th>Imported</th></tr>
+  {% for r in requests %}
+  <tr>
+    <td><a href="/sourcing/{{ r.id }}">{{ r.created_at.strftime("%Y-%m-%d") }}</a></td>
+    <td>{{ r.criteria.get("industry", "") }} — {{ r.criteria.get("locations", "") }}</td>
+    <td><span class="badge {{ 'done' if r.status == 'fulfilled' else 'open' }}">{{ r.status }}</span></td>
+    <td>{{ r.imported_lead_count }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">No sourcing requests yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

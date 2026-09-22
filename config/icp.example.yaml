@@ -8,7 +8,7 @@
 # they're the businesses who run construction projects and need the site
 # turned over clean at the end of every one: general contractors, builders,
 # remodelers, developers, and the property managers / real estate agents who
-# need units move-in-ready. Apollo (the data source this pulls from) is a B2B
+# need units move-in-ready. Apollo.io (the data source this pulls from) is a B2B
 # contact database, so it can only reach those businesses anyway — it has no
 # way to cold-email individual homeowners, and you shouldn't want it to.
 
@@ -34,7 +34,7 @@ company_size_max: 250
 
 # REQUIRED: set this to your actual service area before running sourcing —
 # this is what keeps every lead within driving distance. Be as specific as
-# your Apollo plan allows (city/metro beats state beats country).
+# your Apollo.io plan allows (city/metro beats state beats country).
 target_locations:
   - "Austin, Texas"
 

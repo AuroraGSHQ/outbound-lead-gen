@@ -2,26 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}Outbound Lead-Gen Bot{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1b2a">
+  <title>{% block title %}Cosmos{% endblock %}</title>
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cosmos">
   <style>
-    body { font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 760px; margin: 40px auto; color: #1a1a1a; padding: 0 16px; }
+    :root { --navy: #0d1b2a; --teal: #2dc5a8; --gold: #d6a84f; }
+    body { font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 880px; margin: 24px auto; color: #1a1a1a; padding: 0 16px; }
     a { color: #2b6cb0; }
-    nav a { margin-right: 16px; font-weight: 600; }
+    header.top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    header.top .brand { font-weight: 800; color: var(--navy); font-size: 18px; }
+    header.top .brand span { color: var(--teal); }
+    nav { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 6px; }
+    nav a { font-weight: 600; font-size: 14px; }
+    .whoami { font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px; }
+    .whoami form { display: inline; }
+    .whoami button { padding: 4px 10px; font-size: 12px; background: #eee; color: #333; }
     .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     .stat { text-align: center; }
-    .stat .n { font-size: 28px; font-weight: 700; }
+    .stat .n { font-size: 28px; font-weight: 700; color: var(--navy); }
     .stat .label { color: #666; font-size: 13px; }
-    textarea { width: 100%; min-height: 220px; font-family: inherit; font-size: 14px; padding: 8px; }
-    button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    textarea { width: 100%; min-height: 160px; font-family: inherit; font-size: 14px; padding: 8px; box-sizing: border-box; }
+    input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], select {
+      padding: 6px 8px; font-size: 14px; box-sizing: border-box;
+    }
+    button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; background: var(--navy); color: white; }
     .approve { background: #2f855a; color: white; }
     .reject { background: #c53030; color: white; margin-left: 8px; }
+    .secondary { background: #eee; color: #333; }
     .meta { color: #666; font-size: 13px; margin-bottom: 8px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .badge.done { background: #d1f5e0; color: #1a6b3c; }
+    .badge.open { background: #fff3cd; color: #8a6116; }
+    .badge.verified { background: #d1f5e0; color: #1a6b3c; }
+    .badge.unverified { background: #fde2e1; color: #a1231f; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; font-size: 14px; }
+    .fault-list { margin: 4px 0; padding-left: 18px; }
+    .agent-role { color: var(--teal); font-weight: 700; font-size: 12px; text-transform: uppercase; }
   </style>
 </head>
 <body>
-  <nav><a href="/">Dashboard</a><a href="/approvals">Pending approvals</a></nav>
+  {% if user %}
+  <header class="top">
+    <div class="brand">Cosmos <span>by Aurora</span></div>
+    <div class="whoami">
+      {{ user.name }} ({{ user.role }})
+      <form method="post" action="/logout"><button type="submit">Log out</button></form>
+    </div>
+  </header>
+  <nav>
+    <a href="/">Dashboard</a>
+    <a href="/approvals">Approvals</a>
+    <a href="/actions">Actions</a>
+    <a href="/sourcing">Sourcing</a>
+    <a href="/intake">Intake</a>
+    <a href="/clients">Clients</a>
+    <a href="/scanner">Spectrum</a>
+    <a href="/ads">Ads</a>
+    <a href="/referrals">Referrals</a>
+    <a href="/reviews">Reviews</a>
+    <a href="/competitors">Competitors</a>
+    <a href="/crm-sync">CRM Sync</a>
+    <a href="/metrics">Metrics</a>
+    <a href="/team">Team</a>
+    {% if user.role == 'owner' %}<a href="/users">Users</a>{% endif %}
+  </nav>
   <hr>
+  {% endif %}
   {% block content %}{% endblock %}
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/static/sw.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

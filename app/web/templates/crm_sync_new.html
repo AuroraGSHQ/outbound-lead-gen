@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>CRM sync — Wormhole</h1>
+<p class="meta">Paste in whatever you've got — an email, a form submission, call notes — pick which client it's for, and Wormhole extracts the contact details and pushes them into that client's own CRM. Each client's CRM connection (provider, API key, board/location) is set up once from their client page.</p>
+
+<div class="card">
+  <form method="post" action="/crm-sync/parse">
+    <p><label>Client<br>
+      <select name="client_id" required>
+        {% for c in clients %}<option value="{{ c.id }}">{{ c.company_name }}{% if c.crm_provider == 'none' %} — no CRM connected yet{% endif %}</option>{% endfor %}
+      </select>
+    </label></p>
+    <p><label>Paste the lead/client details<br><textarea name="raw_text" placeholder="Paste an email, form submission, or notes here" required></textarea></label></p>
+    <button type="submit">Parse details →</button>
+  </form>
+</div>
+
+<h2>Recent syncs</h2>
+<table>
+  <tr><th>When</th><th>Client</th><th>Provider</th><th>Contact</th><th>Status</th></tr>
+  {% for log in logs %}
+  <tr>
+    <td>{{ log.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+    <td>{{ log.client.company_name }}</td>
+    <td>{{ log.provider }}</td>
+    <td>{{ log.contact_summary }}</td>
+    <td><span class="badge {{ 'done' if log.status == 'success' else 'unverified' }}">{{ log.status }}</span>{% if log.status == 'error' %} — {{ log.message }}{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No syncs yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

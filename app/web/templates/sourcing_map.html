@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Map columns — sourcing request #{{ record.id }}</h1>
+<p class="meta">We guessed a mapping from your column names — check it before importing. Only rows with an email get imported; everything else feeds the same ICP scoring Apollo.io leads get.</p>
+
+<div class="card">
+  <form method="post" action="/sourcing/{{ record.id }}/map">
+    {% for field in fields %}
+    <p>
+      <label>{{ field }}{% if field == "contact_email" %} (required){% endif %}<br>
+        <select name="map_{{ field }}">
+          <option value="">-- not in this file --</option>
+          {% for h in headers %}
+          <option value="{{ h }}" {{ "selected" if suggestion.get(field) == h }}>{{ h }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </p>
+    {% endfor %}
+    <button type="submit">Import leads</button>
+  </form>
+</div>
+{% endblock %}

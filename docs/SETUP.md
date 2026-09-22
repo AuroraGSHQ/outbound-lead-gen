@@ -12,7 +12,7 @@ Sign up at [apollo.io](https://www.apollo.io), grab an API key from
 Settings → Integrations → API, set `APOLLO_API_KEY`.
 
 **API access requires a paid plan.** A free or Professional-Trial account
-can use Apollo's own web UI to search for leads, but calling the search API
+can use Apollo.io's own web UI to search for leads, but calling the search API
 directly (what this bot does) gets rejected with `403 API_INACCESSIBLE` —
 their error message points you at apollo.io/pricing. Confirmed against the
 live API while building this: the auth itself (the request needs the key in
@@ -79,6 +79,170 @@ without emailing them) but never queued for outreach.
 Set `OWNER_EMAIL` to where you want the daily digest and meeting-booked
 alerts sent (defaults can just be your own address).
 
+## 8. Team accounts
+
+`OWNER_UI_USERNAME`/`OWNER_UI_PASSWORD` seed exactly one `owner` account the
+first time the app starts against an empty database — after that, log in
+and use **Users** (owner-only) to create a real account for everyone else,
+with the role matching what they actually do:
+
+- `owner` — everything, including user management.
+- `sales` — leads, intake, clients, outreach approvals.
+- `marketing` — scanner, ads, content, metrics.
+- `ops` — clients, referrals, the action-item board.
+
+Everyone can view the dashboard, Team, and Metrics pages regardless of role.
+There's also a CLI fallback if you'd rather not use the UI:
+
+```bash
+python scripts/create_user.py --name "Alex Rivera" --email alex@yourcompany.com --role sales
+```
+
+It'll prompt for a password interactively (never pass one on the command
+line where it'd land in shell history).
+
+## 9. Spectrum agent (optional review-count check)
+
+The Broken-Funnel Scanner (manual §8) runs its cheap/objective checks (page
+load, mobile viewport, tracking pixels, click-to-call) against any domain
+with no setup. If you also want the review-count/recency check, get a key
+from [Google Cloud Console → Places API](https://console.cloud.google.com)
+and set `GOOGLE_PLACES_API_KEY` — this integration point exists in
+`app/integrations/site_checks.py` but isn't wired to Places yet; without a
+key the scanner simply skips that one check and still runs everything else.
+
+## 10. Ads agent (optional, advanced)
+
+By default the Orbit agent generates a full campaign brief every month
+(budget split, audience, ad copy) and hands it to you as a ready-to-paste
+package — publishing stays a two-minute manual step in Google Ads / Meta Ads
+Manager. This is deliberate: both platforms require a developer application
++ review before their APIs can create anything, so brief-only is the honest
+default until you've done that.
+
+If you've already completed both:
+1. Google Ads: apply for a developer token, set up OAuth credentials, get a
+   refresh token, then set `GOOGLE_ADS_DEVELOPER_TOKEN` (plus the
+   client id/secret/refresh token/customer id your integration needs), add
+   the `google-ads` package to `requirements.txt`, and implement
+   `create_paused_campaign()` in `app/integrations/google_ads.py`.
+2. Meta: get Marketing API access approved for your app, set
+   `META_ACCESS_TOKEN` (plus app id/secret/ad account id), add the
+   `facebook-business` package, and implement `create_paused_campaign()` in
+   `app/integrations/meta_ads.py`.
+
+Either way, campaigns should always be created **paused** — a person flips
+them live, the same draft-and-approve principle as every send in this app.
+
+## 11. Turning agents on/off, and system-health alerts
+
+Every agent on the **Team** page has an on/off switch (owner-only) — flip
+one off and its scheduled job skips itself (logged, not silently dropped)
+until you turn it back on. Nothing it already produced gets deleted.
+
+Two settings feed the newer agents:
+
+- `OWN_DOMAIN` (optional) — Prism's self-audit target. Set it to
+  Aurora's own site and Prism runs the same passive checks Spectrum runs on
+  prospects, against you. Leave it blank and Prism has nothing to check.
+- **System alerts** — Core (system health) emails immediately, not on
+  the daily digest, when configuration is missing, a dependency has
+  drifted from `requirements.txt`, or another agent's last run failed.
+  Recipients are every `owner`-role account plus anyone with the "system
+  alerts" flag turned on from the Users page ("whoever else I allow").
+
+## 12. Vibe Prospecting sourcing (person-run, by design)
+
+Vibe Prospecting/Explorium has no portable API key to configure — it's
+accessed through a Claude MCP connector, session-scoped, and its own rules
+require showing you the credit cost and getting explicit confirmation
+before every export. That's a real guardrail, not a limitation to build
+around, so there's nothing to set up in `.env` for it: the app only needs
+somewhere to land the results.
+
+Workflow (also described in the README): create a request on the
+**Sourcing** page with your criteria, run the prompt it gives you in any
+Claude session that has the Vibe Prospecting connector enabled, then upload
+the resulting CSV back on that request's page. You'll confirm the column
+mapping (a best guess is pre-filled) before anything imports. From there,
+imported leads are scored and queued exactly like Apollo.io leads.
+
+## 13. CRM sync — Wormhole (per client, optional)
+
+Wormhole (the **CRM Sync** page) lets your team paste a lead's details — an
+email, a form submission, call notes — and pushes the extracted contact
+straight into that specific client's own CRM. Each client's connection is
+configured once, on their client page, under "CRM connection — Wormhole"; no
+credentials live in `.env`, because each client uses their own CRM account,
+not yours.
+
+Pick a client's provider and fill in what it needs:
+
+- **HubSpot** — an API key only. In the client's HubSpot account: Settings →
+  Integrations → Private Apps → create one with the `crm.objects.contacts`
+  scopes → copy the generated token into the "API key" field.
+- **Monday.com** — an API key, a board ID, and a column map. In the client's
+  Monday account: avatar → Admin → API → generate a personal token. The
+  board ID is the number in that board's URL. The column map is JSON
+  mapping Wormhole's fields (`full_name`, `first_name`, `last_name`, `email`,
+  `phone`, `company`, `source`, `notes`) to that board's column IDs, e.g.
+  `{"email": "email_mkp8", "phone": "phone_mkp9"}` — find column IDs from
+  the board's "..." menu → "Export board" or via Monday's API playground.
+- **GoHighLevel** — an API key and a location ID. In the client's HighLevel
+  sub-account: Settings → Private Integrations → create one with the
+  contacts read/write scopes. The location ID is shown on that same
+  Settings page.
+- **Other** — no built-in integration yet; the sync log will say to log
+  the lead into that client's CRM by hand.
+
+A blank API key field on save means "keep the key already stored" — it's
+never echoed back to the browser. Every push (success or failure) is
+recorded in that client's sync log and on the CRM Sync page, so a bad key
+or a stale board ID shows up immediately instead of silently dropping a
+lead.
+
+## 14. Twilio + ElevenLabs — Beacon's phone channel (optional)
+
+Beacon can text and call leads, on top of email — SMS is a straightforward
+send/receive; voice is a **one-way message**: a script gets drafted, synthesized
+into audio by ElevenLabs, and Twilio calls the lead and plays it back. This is
+not a live two-way phone conversation — a real-time voice agent (speech-to-text,
+streaming Claude, streaming TTS over Twilio Media Streams) is a much bigger
+build and isn't included here.
+
+**Twilio** (SMS + calls):
+1. Create an account at twilio.com, buy a phone number capable of SMS + voice.
+2. From the Twilio Console, copy your Account SID and Auth Token into
+   `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`.
+3. Set `TWILIO_FROM_NUMBER` to the number you bought, in E.164 format
+   (`+15551234567`).
+4. For inbound SMS replies to reach Cosmos, point that number's messaging
+   webhook (Console → Phone Numbers → your number → Messaging → "A message
+   comes in") at `https://<your-domain>/webhooks/twilio-sms`. This only
+   works once the app is deployed somewhere with a real HTTPS URL —
+   `localhost` can't receive Twilio's webhook.
+
+**ElevenLabs** (voice only — skip this if you only want SMS):
+1. Create an account at elevenlabs.io, get an API key, and set
+   `ELEVENLABS_API_KEY`.
+2. Pick (or clone) a voice, and set `ELEVENLABS_VOICE_ID` to its id.
+3. Set `PUBLIC_BASE_URL` to your app's real HTTPS URL (e.g.
+   `https://cosmos.up.railway.app`) — Twilio needs to fetch the synthesized
+   clip from a real internet address to play it on the call, so this has to
+   be set before any voice call will work. It stays blank harmlessly until
+   then; a voice send just fails with a clear error telling you to set it.
+
+**Using it**: on a lead's row on the `/leads` page, add their phone number
+(E.164 format), then use "Beacon: draft SMS" or "Beacon: draft call" —
+both land in the same Approvals queue as email drafts, so nothing calls or
+texts a lead without a human clicking approve.
+
+**Compliance note**: SMS marketing has its own rules (TCPA in the US) —
+every outbound SMS this app drafts gets a "Reply STOP to opt out" line
+appended automatically, but you're still responsible for how you use this
+(consent to text, calling hours, do-not-call lists). Read up on TCPA
+requirements for your use case before sending real SMS/calls at any volume.
+
 ## Sizing your outreach volume (read this before chasing an aggressive revenue target)
 
 If the goal is a specific revenue number in a specific window, work the math
@@ -98,7 +262,7 @@ points — the first two weeks of this running are themselves how you find out
 those numbers, so don't over-trust a guess here.
 
 **The hard constraint that actually caps how fast you can scale this isn't
-Apollo credits or Claude tokens — it's Gmail deliverability.** Sending from a
+Apollo.io credits or Claude tokens — it's Gmail deliverability.** Sending from a
 real Gmail/Workspace address gets you much better reply rates than a bulk
 sending platform, but it comes with real limits:
 
@@ -111,7 +275,7 @@ sending platform, but it comes with real limits:
   Going from 25/day to 25/day for the first two weeks, then increasing, will
   get you to a sustainably higher volume faster than jumping straight to 100.
 - Every bounce or spam complaint hurts sender reputation more than a normal
-  send helps it — keep your lead list clean (Apollo email verification
+  send helps it — keep your lead list clean (Apollo.io email verification
   status, the `exclude_domains` list, sensible ICP filters) rather than
   maximizing raw volume.
 - If the math above says you need more daily volume than Gmail can sustain
@@ -132,7 +296,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 - **VM / systemd**: run the above under a systemd unit (or `screen`/`tmux`
   for a quick test), put a reverse proxy (Caddy/nginx) with TLS in front of
-  it so Calendly's webhook can reach it over HTTPS.
+  it so Calendly's webhook can reach it over HTTPS. This also matters for
+  the PWA install: phones only offer "Add to Home Screen"/"Install app" for
+  a page served over real HTTPS on a real domain, not for `localhost` or
+  plain HTTP.
 - **Docker**: no Dockerfile is included yet — it's a straightforward
   `python:3.12-slim` + `pip install -r requirements.txt` + the uvicorn
   command above; ask if you want one written.

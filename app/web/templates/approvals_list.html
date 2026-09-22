@@ -6,8 +6,9 @@
 {% endif %}
 {% for m in items %}
   <div class="card">
-    <div class="meta">To: {{ m.conversation.lead.contact_name }} &lt;{{ m.conversation.lead.contact_email }}&gt; — {{ m.conversation.lead.company_name }}</div>
-    <strong>{{ m.subject }}</strong>
+    <span class="badge open">{{ m.channel }}</span>
+    <div class="meta">To: {{ m.conversation.lead.contact_name }} &lt;{{ m.conversation.lead.contact_email }}&gt; — {{ m.conversation.lead.company_name }}{% if m.channel != 'email' %} — {{ m.conversation.lead.contact_phone }}{% endif %}</div>
+    {% if m.subject %}<strong>{{ m.subject }}</strong>{% endif %}
     <p>{{ m.body[:200] }}{% if m.body|length > 200 %}…{% endif %}</p>
     <a href="/approvals/{{ m.id }}">Review →</a>
   </div>

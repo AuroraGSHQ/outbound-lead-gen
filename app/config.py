@@ -21,10 +21,36 @@ class Settings(BaseSettings):
     # Lead sourcing
     apollo_api_key: str = ""
 
+    # Spectrum agent (optional — review-count/recency check is skipped without it)
+    google_places_api_key: str = ""
+
+    # Ads agent — real publishing stays off until these are set (see
+    # app/integrations/google_ads.py / meta_ads.py)
+    google_ads_developer_token: str = ""
+    meta_access_token: str = ""
+
+    # Prism (self-audit) — Aurora's own domain, checked with the same
+    # passive checks Spectrum (scanner) runs on prospects. Blank = skipped.
+    own_domain: str = ""
+
     # Gmail
     gmail_sender_email: str = ""
     gmail_credentials_path: str = "data/credentials.json"
     gmail_token_path: str = "data/token.json"
+
+    # Twilio (Beacon's phone channel — SMS + outbound voice)
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_from_number: str = ""
+
+    # ElevenLabs (text-to-speech for Beacon's voice channel)
+    elevenlabs_api_key: str = ""
+    elevenlabs_voice_id: str = ""
+    voice_clip_dir: str = "data/voice_clips"
+    # Publicly reachable base URL for this app (e.g. https://cosmos.up.railway.app) —
+    # Twilio fetches the synthesized voice clip from here, so it must be a real
+    # internet-reachable HTTPS URL, not localhost.
+    public_base_url: str = ""
 
     # Calendly
     calendly_booking_link: str = ""

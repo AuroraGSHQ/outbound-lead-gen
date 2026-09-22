@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ campaign.platform }} — {{ campaign.quarter_label }}</h1>
+<div class="card">
+  <span class="badge {{ 'done' if campaign.status == 'published' else 'open' }}">{{ campaign.status }}</span>
+  <pre style="white-space: pre-wrap; font-family: inherit;">{{ campaign.brief_markdown }}</pre>
+</div>
+{% if campaign.status != "published" %}
+<form method="post" action="/ads/{{ campaign.id }}/publish">
+  <button type="submit">Mark as published (after you've created it manually in the ads manager)</button>
+</form>
+{% endif %}
+<p><a href="/ads">← back to campaigns</a></p>
+{% endblock %}

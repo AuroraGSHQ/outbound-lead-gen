@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Action board</h1>
+<p class="meta">Every next step any agent has proposed — auto-run when there's a safe handler, otherwise yours to do. "Run it" only exists where a handler is known; anything client-facing still lands in Approvals rather than sending itself.</p>
+
+<form method="get" action="/actions">
+  <select name="status" onchange="this.form.submit()">
+    <option value="" {{ "selected" if not status }}>All statuses</option>
+    <option value="proposed" {{ "selected" if status == "proposed" }}>Proposed</option>
+    <option value="done" {{ "selected" if status == "done" }}>Done</option>
+    <option value="rejected" {{ "selected" if status == "rejected" }}>Rejected</option>
+  </select>
+  <select name="category" onchange="this.form.submit()">
+    <option value="" {{ "selected" if not category }}>All categories</option>
+    {% for c in ["intake_followup","outreach","scanner_verify","referral","ads","content","admin","onboarding","billing","reviews","competitor","churn","system"] %}
+    <option value="{{ c }}" {{ "selected" if category == c }}>{{ c }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% for item in items %}
+<div class="card">
+  <span class="badge {{ 'done' if item.status == 'done' else 'open' }}">{{ item.status }}</span>
+  <span class="meta">{{ item.category }}{% if item.auto_executable %} · automated{% endif %} · {{ item.created_by }}</span>
+  <p><strong>{{ item.title }}</strong></p>
+  <p>{{ item.description }}</p>
+  {% if item.result %}<p><em>{{ item.result }}</em></p>{% endif %}
+  {% if item.status != "done" %}
+  <form method="post" action="/actions/{{ item.id }}/execute" style="display:inline;">
+    {% if item.handler %}<button type="submit">Run it</button>{% endif %}
+  </form>
+  <form method="post" action="/actions/{{ item.id }}/done" style="display:inline;">
+    <button type="submit" class="secondary">Mark done</button>
+  </form>
+  {% endif %}
+</div>
+{% else %}
+<p>Nothing here right now.</p>
+{% endfor %}
+{% endblock %}

@@ -8,13 +8,15 @@ there's exactly one code path that hits the network and updates state.
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.integrations import gmail
+from app.integrations import elevenlabs, gmail, twilio_sms
 from app.integrations.claude import BusinessProfile
-from app.models import LeadStatus, Message, MessageDirection, MessageStatus
+from app.models import LeadStatus, Message, MessageChannel, MessageDirection, MessageStatus
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,11 @@ def compose_footer(profile: BusinessProfile) -> str:
 
 
 def send_message(session: Session, settings: Settings, message_id: int) -> Message:
+    """The one send path for every outbound channel. Which network call it
+    makes depends on message.channel — email via Gmail, sms/voice via
+    Twilio (voice is synthesized by ElevenLabs first) — but every channel
+    lands here, keeps the same status transitions, and updates the same
+    lead/conversation state."""
     message = session.get(Message, message_id)
     if message is None:
         raise ValueError(f"No message with id {message_id}")
@@ -48,6 +55,26 @@ def send_message(session: Session, settings: Settings, message_id: int) -> Messa
         logger.warning("Refused to send to unsubscribed lead %s", lead.contact_email)
         return message
 
+    channel = message.channel or MessageChannel.EMAIL.value
+    if channel == MessageChannel.SMS.value:
+        _send_sms(settings, message, lead)
+    elif channel == MessageChannel.VOICE.value:
+        _send_voice(settings, message, lead)
+    else:
+        _send_email(settings, conversation, message, lead)
+
+    message.status = MessageStatus.SENT.value
+    message.sent_at = datetime.now(timezone.utc)
+
+    if lead.status not in _TERMINAL_STATUSES:
+        lead.status = LeadStatus.CONTACTED.value
+
+    session.commit()
+    logger.info("Sent %s message %s to lead %s", channel, message.id, lead.id)
+    return message
+
+
+def _send_email(settings: Settings, conversation, message: Message, lead) -> None:
     service = gmail.build_service(settings.gmail_token_path)
 
     in_reply_to = None
@@ -65,22 +92,29 @@ def send_message(session: Session, settings: Settings, message_id: int) -> Messa
         thread_id=conversation.gmail_thread_id or None,
         in_reply_to=in_reply_to,
     )
-
-    message.status = MessageStatus.SENT.value
     message.gmail_message_id = sent.message_id
-    from datetime import datetime, timezone
-
-    message.sent_at = datetime.now(timezone.utc)
-
     if not conversation.gmail_thread_id:
         conversation.gmail_thread_id = sent.thread_id
 
-    if lead.status not in _TERMINAL_STATUSES:
-        lead.status = LeadStatus.CONTACTED.value
 
-    session.commit()
-    logger.info("Sent message %s to %s (thread %s)", message.id, lead.contact_email, sent.thread_id)
-    return message
+def _send_sms(settings: Settings, message: Message, lead) -> None:
+    result = twilio_sms.send_sms(
+        settings.twilio_account_sid, settings.twilio_auth_token, settings.twilio_from_number, lead.contact_phone, message.body
+    )
+    message.twilio_sid = result.get("sid", "")
+
+
+def _send_voice(settings: Settings, message: Message, lead) -> None:
+    clip_path = Path(settings.voice_clip_dir) / f"{message.id}.mp3"
+    elevenlabs.synthesize_to_file(settings.elevenlabs_api_key, settings.elevenlabs_voice_id, message.body, clip_path)
+    if not settings.public_base_url:
+        raise ValueError("PUBLIC_BASE_URL is not set — Twilio needs a public URL to fetch the voice clip.")
+    audio_url = f"{settings.public_base_url.rstrip('/')}/voice-clips/{message.id}.mp3"
+    result = twilio_sms.place_call_with_audio(
+        settings.twilio_account_sid, settings.twilio_auth_token, settings.twilio_from_number, lead.contact_phone, audio_url
+    )
+    message.voice_clip_path = str(clip_path)
+    message.twilio_sid = result.get("sid", "")
 
 
 def approve_and_send(

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Review before pushing — Wormhole</h1>
+<p class="meta">Wormhole pulled these fields out of what you pasted for <strong>{{ client.company_name }}</strong>. Fix anything wrong, then push to {{ client.crm_provider }}.</p>
+
+{% if client.crm_provider == 'none' %}
+<div class="card"><p class="meta">This client has no CRM connection configured yet — set one up on their <a href="/clients/{{ client.id }}">client page</a> before pushing.</p></div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/crm-sync/push">
+    <input type="hidden" name="client_id" value="{{ client.id }}">
+    <p><label>Full name<br><input type="text" name="full_name" value="{{ fields.full_name }}"></label></p>
+    <p><label>First name<br><input type="text" name="first_name" value="{{ fields.first_name }}"></label></p>
+    <p><label>Last name<br><input type="text" name="last_name" value="{{ fields.last_name }}"></label></p>
+    <p><label>Email<br><input type="email" name="email" value="{{ fields.email }}"></label></p>
+    <p><label>Phone<br><input type="text" name="phone" value="{{ fields.phone }}"></label></p>
+    <p><label>Company<br><input type="text" name="company" value="{{ fields.company }}"></label></p>
+    <p><label>Source<br><input type="text" name="source" value="{{ fields.source }}"></label></p>
+    <p><label>Notes<br><textarea name="notes">{{ fields.notes }}</textarea></label></p>
+    <button type="submit" {{ "disabled" if client.crm_provider == 'none' }}>Push to {{ client.crm_provider if client.crm_provider != 'none' else 'CRM' }} →</button>
+    <a href="/crm-sync" class="secondary" style="margin-left:8px;">Cancel</a>
+  </form>
+</div>
+{% endblock %}

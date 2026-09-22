@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Review draft</h1>
+<h1>Review draft — <span class="badge open">{{ message.channel }}</span></h1>
 <div class="card">
   <div class="meta">
-    To: {{ lead.contact_name }} ({{ lead.contact_title }} at {{ lead.company_name }}) &lt;{{ lead.contact_email }}&gt;<br>
+    To: {{ lead.contact_name }} ({{ lead.contact_title }} at {{ lead.company_name }})
+    {% if message.channel == 'email' %}&lt;{{ lead.contact_email }}&gt;{% else %}&lt;{{ lead.contact_phone or "no phone on file" }}&gt;{% endif %}<br>
     ICP score: {{ lead.icp_score }} — {{ lead.score_reasons }}
   </div>
+  {% if message.channel == 'voice' %}
+  <p class="meta">This is the script for a one-way voice message — approving synthesizes it with ElevenLabs and has Twilio call {{ lead.contact_name }} and play it back.</p>
+  {% endif %}
   <form method="post" action="/approvals/{{ message.id }}/approve">
-    <label><strong>Subject:</strong> {{ message.subject }}</label>
+    {% if message.channel == 'email' %}<label><strong>Subject:</strong> {{ message.subject }}</label>{% endif %}
     <textarea name="body">{{ message.body }}</textarea>
     <p>
       <button class="approve" type="submit">Approve &amp; send</button>
