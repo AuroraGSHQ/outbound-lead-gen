@@ -18,7 +18,7 @@ _VIEWPORT_RE = re.compile(r'<meta[^>]+name=["\']viewport["\']', re.IGNORECASE)
 _TEL_RE = re.compile(r'href=["\']tel:', re.IGNORECASE)
 _FORM_RE = re.compile(r"<form\b", re.IGNORECASE)
 
-_USER_AGENT = "Mozilla/5.0 (compatible; AuroraGrowthOS-Scanner/1.0; passive read-only check)"
+_USER_AGENT = "Mozilla/5.0 (compatible; AuroraGrowthOS-Spectrum/1.0; passive read-only check)"
 
 
 @dataclass

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Map columns — sourcing request #{{ record.id }}</h1>
-<p class="meta">We guessed a mapping from your column names — check it before importing. Only rows with an email get imported; everything else feeds the same ICP scoring Apollo leads get.</p>
+<p class="meta">We guessed a mapping from your column names — check it before importing. Only rows with an email get imported; everything else feeds the same ICP scoring Apollo.io leads get.</p>
 
 <div class="card">
   <form method="post" action="/sourcing/{{ record.id }}/map">

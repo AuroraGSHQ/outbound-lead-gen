@@ -1,6 +1,6 @@
-"""Chloris — creative fatigue watch. Manual §6: creative fatigue arrives
+"""Nova — creative fatigue watch. Manual §6: creative fatigue arrives
 faster on narrow audiences, rotate every 3-4 weeks or performance quietly
-degrades. Read-only over campaign age — it flags Promoter's (Pheme)
+degrades. Read-only over campaign age — it flags Orbit's
 campaigns for a refresh, it never edits one itself.
 """
 from __future__ import annotations
@@ -38,7 +38,7 @@ def check_creative_fatigue(session: Session, settings=None) -> dict[str, int]:
                 "before fatigue sets in on a narrow audience."
             ),
             category=ActionCategory.ADS.value,
-            created_by="agent:chloris",
+            created_by="agent:nova",
             payload={"ad_campaign_id": campaign.id},
         )
         stats["flags_raised"] += 1

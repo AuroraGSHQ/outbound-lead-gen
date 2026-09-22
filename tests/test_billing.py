@@ -43,7 +43,7 @@ def test_billing_sweep_escalates_a_prior_months_unconfirmed_invoice(db_session):
         title=f"Invoice due — {client.company_name} (2020-01)",
         category="billing",
         client_id=client.id,
-        created_by="agent:plutus",
+        created_by="agent:equinox",
     )
 
     stats = billing.run_billing_sweep(db_session, _settings())
@@ -78,7 +78,7 @@ def test_billing_sweep_does_not_escalate_a_settled_prior_invoice(db_session):
         title=f"Invoice due — {client.company_name} (2020-01)",
         category="billing",
         client_id=client.id,
-        created_by="agent:plutus",
+        created_by="agent:equinox",
     )
     actions.mark_done(db_session, prior.id)
 

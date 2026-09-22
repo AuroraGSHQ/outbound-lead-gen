@@ -1,4 +1,4 @@
-"""Find candidate leads via Apollo, score them against the ICP, store new ones.
+"""Find candidate leads via Apollo.io, score them against the ICP, store new ones.
 
 This module never sends anything — it only populates the `leads` table.
 Deciding who actually gets emailed happens in services/outreach.py.

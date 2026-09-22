@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown(wait=False)
 
 
-app = FastAPI(title="Olympus", lifespan=lifespan)
+app = FastAPI(title="Cosmos", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 
 
@@ -194,7 +194,7 @@ def dashboard(request: Request, db: Session = Depends(get_db), user: User = Depe
     )
 
 
-# --- Approvals (Scribe) ------------------------------------------------------
+# --- Approvals (Beacon) ------------------------------------------------------
 
 
 @app.get("/approvals", response_class=HTMLResponse)
@@ -351,7 +351,7 @@ def draft_call(
     return RedirectResponse(f"/approvals/{message.id}", status_code=303)
 
 
-# --- Twilio (Peitho's phone channel) --------------------------------------
+# --- Twilio (Beacon's phone channel) --------------------------------------
 
 
 @app.post("/webhooks/twilio-sms")
@@ -379,7 +379,7 @@ def get_voice_clip(message_id: int, db: Session = Depends(get_db), settings: Set
     return FileResponse(message.voice_clip_path, media_type="audio/mpeg")
 
 
-# --- Sourcing requests (Hermes / Vibe Prospecting) -----------------------------
+# --- Sourcing requests (Voyager / Vibe Prospecting) -----------------------------
 
 
 @app.get("/sourcing", response_class=HTMLResponse)
@@ -491,7 +491,7 @@ async def confirm_sourcing_mapping(
     return RedirectResponse(f"/sourcing/{request_id}", status_code=303)
 
 
-# --- Intake (Concierge) -------------------------------------------------------
+# --- Intake (Horizon) -------------------------------------------------------
 
 
 @app.get("/intake", response_class=HTMLResponse)
@@ -704,7 +704,7 @@ def update_client_crm_config(
     return RedirectResponse(f"/clients/{client_id}", status_code=303)
 
 
-# --- CRM sync (Charon) ---------------------------------------------------------
+# --- CRM sync (Wormhole) ---------------------------------------------------------
 
 
 @app.get("/crm-sync", response_class=HTMLResponse)
@@ -815,7 +815,7 @@ def draft_scan_outreach(
     return RedirectResponse("/approvals", status_code=303)
 
 
-# --- Referrals (Connector) -----------------------------------------------------
+# --- Referrals (Constellation) -----------------------------------------------------
 
 
 @app.get("/referrals", response_class=HTMLResponse)
@@ -862,7 +862,7 @@ def update_referral(
     return RedirectResponse("/referrals", status_code=303)
 
 
-# --- Ads (Promoter) -------------------------------------------------------------
+# --- Ads (Orbit) -------------------------------------------------------------------
 
 
 @app.get("/ads", response_class=HTMLResponse)
@@ -904,7 +904,7 @@ def generate_content(
     return RedirectResponse("/actions", status_code=303)
 
 
-# --- Reviews (Echo) -------------------------------------------------------------
+# --- Reviews (Radiance) -------------------------------------------------------------
 
 
 @app.get("/reviews", response_class=HTMLResponse)
@@ -934,7 +934,7 @@ def log_review(
     return RedirectResponse("/reviews", status_code=303)
 
 
-# --- Competitor watch (Eris / Astraea) -------------------------------------------
+# --- Competitor watch (Eclipse / Parallax) -------------------------------------------
 
 
 @app.get("/competitors", response_class=HTMLResponse)

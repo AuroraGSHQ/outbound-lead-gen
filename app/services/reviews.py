@@ -1,4 +1,4 @@
-"""Echo — reputation & reviews. No Google/Facebook review API is wired in
+"""Radiance — reputation & reviews. No Google/Facebook review API is wired in
 (there's nothing to poll), so this covers what's honestly buildable without
 one: a scheduled nudge to ask happy clients for a review, and an on-demand
 "log what a review said, get a reply drafted" flow for whoever's watching
@@ -52,7 +52,7 @@ def check_review_requests_due(session: Session, settings: Settings) -> dict[str,
             description="60 days in and things are going well — a good moment to ask for a public review.",
             category=ActionCategory.REVIEWS.value,
             client_id=client.id,
-            created_by="agent:echo",
+            created_by="agent:radiance",
         )
         item.result = (
             "Ask: \"Glad it's working out — would you mind leaving a quick Google review? "
@@ -80,7 +80,7 @@ def log_review_and_draft_response(
         description=review_text,
         category=ActionCategory.REVIEWS.value,
         client_id=client_id,
-        created_by="agent:echo",
+        created_by="agent:radiance",
     )
     item.result = f"Drafted reply (paste into Google/Facebook by hand):\n\n{reply}"
     session.commit()

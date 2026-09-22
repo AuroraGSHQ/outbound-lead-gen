@@ -144,7 +144,7 @@ class DigestState(Base):
 
 
 # ---------------------------------------------------------------------------
-# Olympus: agents, users, and the client-lifecycle layer on top of
+# Cosmos: agents, users, and the client-lifecycle layer on top of
 # the outbound engine above.
 # ---------------------------------------------------------------------------
 
@@ -165,7 +165,7 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(50), default=UserRole.OPS.value)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    # Hephaestus (system health) sends an immediate alert to every owner
+    # Core (system health) sends an immediate alert to every owner
     # plus anyone with this flag on, rather than waiting for the daily
     # digest — see services/system_health.py.
     notify_system_alerts: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -198,7 +198,7 @@ class Client(Base):
     referral_source: Mapped[str] = mapped_column(String(255), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
 
-    # Charon (CRM handoff) — this client's own CRM connection. Every client
+    # Wormhole (CRM handoff) — this client's own CRM connection. Every client
     # can run a different platform, so this lives per-Client, not globally.
     crm_provider: Mapped[str] = mapped_column(String(50), default="none")
     crm_api_key: Mapped[str] = mapped_column(Text, default="")
@@ -218,7 +218,7 @@ class Client(Base):
 
 class IntakeCall(Base):
     """Raw + Claude-structured notes from a discovery/intro call. The
-    Concierge agent's source record."""
+    Horizon agent's source record."""
 
     __tablename__ = "intake_calls"
 
@@ -339,7 +339,7 @@ class AdCampaignStatus(str, enum.Enum):
 
 
 class AdCampaign(Base):
-    """A Promoter-agent-generated campaign brief (manual §4/§6/§14). Publish
+    """An Orbit-agent-generated campaign brief (manual §4/§6/§14). Publish
     stays a manual step (or a future real-API integration) — this row is the
     plan plus the paste-ready copy, not a live campaign."""
 
@@ -369,7 +369,7 @@ class ReferralStatus(str, enum.Enum):
 
 
 class ReferralRecord(Base):
-    """Connector-agent tracking for manual §11's referral engine."""
+    """Constellation-agent tracking for manual §11's referral engine."""
 
     __tablename__ = "referral_records"
 
@@ -397,7 +397,7 @@ class SourcingRequest(Base):
     """A scouting request for a data source that can't be called directly
     from the backend — Vibe Prospecting (Explorium) is credit-metered and
     requires a human to confirm cost before every export, so it can't run as
-    an unattended job the way Apollo sourcing does. This captures the
+    an unattended job the way Apollo.io sourcing does. This captures the
     criteria, backs a ready-to-paste prompt for a Vibe-Prospecting-enabled
     Claude session (services/sourcing_requests.py), and tracks the CSV
     import that fulfills it (services/lead_import.py). `pending_csv` holds
@@ -443,7 +443,7 @@ class JobRunStatus(str, enum.Enum):
 
 class JobRun(Base):
     """One execution record per scheduled job. Written by
-    scheduler._run_safely on every run (not just failures), so Hephaestus
+    scheduler._run_safely on every run (not just failures), so Core
     (services/system_health.py) can tell a job that's failing from one
     that's simply gone quiet, and /team can show real last-run status
     instead of only "next run"."""
@@ -465,7 +465,7 @@ class CompetitorNoteType(str, enum.Enum):
 
 class CompetitorNote(Base):
     """A manually-logged observation about a competitor — an ad, a pricing
-    page, a positioning line. Eris (competitor watch) and Astraea (pricing
+    page, a positioning line. Eclipse (competitor watch) and Parallax (pricing
     benchmark) share this table, distinguished by `note_type`; there's no
     ad-transparency or scraping API wired in, on purpose — see
     services/competitor_watch.py."""
@@ -496,7 +496,7 @@ class CrmSyncStatus(str, enum.Enum):
 
 
 class CrmSyncLog(Base):
-    """Charon's audit trail: one row per attempted push into a client's CRM,
+    """Wormhole's audit trail: one row per attempted push into a client's CRM,
     success or failure, so a bad push is visible rather than silently lost."""
 
     __tablename__ = "crm_sync_logs"
@@ -515,7 +515,7 @@ class CrmSyncLog(Base):
 
 
 class MetricSnapshot(Base):
-    """Daily rollup of the manual §15 six numbers, computed by the Analyst
+    """Daily rollup of the manual §15 six numbers, computed by the Observatory
     agent so the /metrics page doesn't recompute on every load."""
 
     __tablename__ = "metric_snapshots"

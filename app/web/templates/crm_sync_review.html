@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Review before pushing — Charon</h1>
-<p class="meta">Charon pulled these fields out of what you pasted for <strong>{{ client.company_name }}</strong>. Fix anything wrong, then push to {{ client.crm_provider }}.</p>
+<h1>Review before pushing — Wormhole</h1>
+<p class="meta">Wormhole pulled these fields out of what you pasted for <strong>{{ client.company_name }}</strong>. Fix anything wrong, then push to {{ client.crm_provider }}.</p>
 
 {% if client.crm_provider == 'none' %}
 <div class="card"><p class="meta">This client has no CRM connection configured yet — set one up on their <a href="/clients/{{ client.id }}">client page</a> before pushing.</p></div>

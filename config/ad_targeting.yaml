@@ -1,5 +1,5 @@
 # Audience targeting + creative-angle definitions, from the Acquisition
-# Manual §5 and §6. Used by the Promoter agent (app/services/ads.py) when
+# Manual §5 and §6. Used by the Orbit agent (app/services/ads.py) when
 # generating ad copy/briefs — edit to match your real ICP as it firms up.
 
 segment_smb:

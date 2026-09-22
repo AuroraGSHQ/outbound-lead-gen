@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Your AI team</h1>
-<p class="meta">Twenty-three agents, each backed by a real scheduled job (or run on-demand where noted) — not a marketing claim. Client-facing output from any of them still queues in Approvals before it goes out. Turn one off and its scheduled job skips itself (and gets logged as skipped) until you turn it back on.</p>
+<p class="meta">Thirty-one agents, each backed by a real scheduled job (or run on-demand where noted) — not a marketing claim. Client-facing output from any of them still queues in Approvals before it goes out. Turn one off and its scheduled job skips itself (and gets logged as skipped) until you turn it back on.</p>
 {% for a in agents %}
 <div class="card">
   <div class="agent-role">{{ a.role }}</div>

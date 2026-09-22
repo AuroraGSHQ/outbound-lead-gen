@@ -1,6 +1,6 @@
 {
-  "name": "Olympus",
-  "short_name": "Olympus",
+  "name": "Cosmos",
+  "short_name": "Cosmos",
   "description": "Aurora's outbound engine, intake, scanner, ads, referrals and metrics — one dashboard for the whole team.",
   "start_url": "/",
   "scope": "/",

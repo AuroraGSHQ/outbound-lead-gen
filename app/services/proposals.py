@@ -1,6 +1,6 @@
-"""Dike — proposals & contracts. Turns a client's intake-recommended tier
+"""Axis — proposals & contracts. Turns a client's intake-recommended tier
 into a ready-to-send proposal (scope, price, the booked-job-floor
-guarantee). Only ever acts on Themis's (intake) structured output — it
+guarantee). Only ever acts on Horizon's (intake) structured output — it
 never invents outreach of its own.
 """
 from __future__ import annotations
@@ -58,7 +58,7 @@ def generate_proposal(session: Session, settings: Settings, client_id: int) -> A
         title=f"Proposal draft — {client.company_name}",
         category=ActionCategory.ADMIN.value,
         client_id=client.id,
-        created_by="agent:dike",
+        created_by="agent:axis",
     )
     item.result = markdown
     session.commit()

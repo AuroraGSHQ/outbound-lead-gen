@@ -1,4 +1,4 @@
-"""Peitho's phone channel — SMS and one-way outbound voice, built on the
+"""Beacon's phone channel — SMS and one-way outbound voice, built on the
 same draft-and-approve queue email uses. A lead needs a phone number on
 file (Lead.contact_phone) before either channel can be used; there's no
 guessing or reusing another lead's number.

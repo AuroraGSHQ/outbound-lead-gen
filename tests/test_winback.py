@@ -40,7 +40,7 @@ def test_drafts_for_lead_in_the_six_week_window(db_session, monkeypatch):
     assert stats["drafted"] == 1
     message = db_session.query(Message).one()
     assert message.status == "pending_approval"
-    assert message.reviewer_note == "agent:persephone:winback"
+    assert message.reviewer_note == "agent:gravity:winback"
 
 
 def test_skips_lead_too_recent(db_session, monkeypatch):

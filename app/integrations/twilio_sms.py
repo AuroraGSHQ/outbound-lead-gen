@@ -1,4 +1,4 @@
-"""Twilio — SMS send/receive and outbound voice calls, for Peitho's phone
+"""Twilio — SMS send/receive and outbound voice calls, for Beacon's phone
 channel. Talks to Twilio's REST API directly over httpx (no twilio SDK
 dependency), the same style as the CRM integrations.
 

@@ -1,4 +1,4 @@
-"""Persephone — win-back. Manual §11's overlooked referral source: a
+"""Gravity — win-back. Manual §11's overlooked referral source: a
 prospect you honestly told wasn't a fit remembers that, and is worth asking
 for a referral six weeks later. This only ever produces a draft in the same
 Approvals queue everything else uses — it never re-contacts anyone on its
@@ -52,7 +52,7 @@ def check_winback_due(session: Session, settings: Settings) -> dict[str, int]:
     profile = _business_profile(settings)
     drafter = ClaudeDrafter(settings.anthropic_api_key, settings.anthropic_model)
 
-    _WINBACK_MARKER = "agent:persephone:winback"
+    _WINBACK_MARKER = "agent:gravity:winback"
 
     for lead in candidates:
         already = (

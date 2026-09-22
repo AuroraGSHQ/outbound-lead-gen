@@ -35,7 +35,7 @@ def test_check_job_health_flags_failed_agent(db_session):
     db_session.commit()
 
     problems = system_health._check_job_health(db_session)
-    assert any("Hermes" in p and "boom" in p for p in problems)
+    assert any("Voyager" in p and "boom" in p for p in problems)
 
 
 def test_run_system_check_creates_item_and_alerts_once(db_session, monkeypatch):

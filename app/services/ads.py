@@ -1,4 +1,4 @@
-"""The Promoter agent: manual §4/§6/§14. Generates a full monthly campaign
+"""The Orbit agent: manual §4/§6/§14. Generates a full monthly campaign
 brief per platform in the current quarter's budget allocation — audience,
 budget split, ad copy by angle — as a ready-to-paste package. Live publishing
 to Google/Meta stays a manual step (or a future integration — see
@@ -117,7 +117,7 @@ def generate_monthly_brief(
             ),
             category=ActionCategory.ADS.value,
             auto_executable=False,
-            created_by="agent:promoter",
+            created_by="agent:orbit",
             payload={"ad_campaign_id": campaign.id},
         )
         stats["campaigns_created"] += 1

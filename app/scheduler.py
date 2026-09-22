@@ -1,5 +1,5 @@
 """Wires up the recurring jobs — the actual "24/7" part of the AI-employee
-framing. Every job records a JobRun (ok/error/skipped) so Hephaestus can
+framing. Every job records a JobRun (ok/error/skipped) so Core can
 tell a failing agent from a quiet one, and every job checks
 agent_toggles.is_enabled() for its owning agent before doing anything —
 that's the single place the on/off switch (Team page) actually takes
@@ -7,9 +7,9 @@ effect. Each job opens its own DB session so failures in one don't corrupt
 state for the others, and swallows exceptions so a single bad run doesn't
 kill the whole scheduler process.
 
-AGENT_JOBS is the roster the /team page reads: name, mythological role,
+AGENT_JOBS is the roster the /team page reads: name, astronomy-themed role,
 description, the scheduled job that backs it (if any), and the toggle
-`key`. Several jobs can belong to one agent (Peitho/Scribe runs three); the
+`key`. Several jobs can belong to one agent (Beacon/Scribe runs three); the
 toggle always applies at the agent level, not the individual job.
 """
 from __future__ import annotations
@@ -46,7 +46,7 @@ from app.services import (
     system_health,
     winback,
 )
-# crm_sync (Charon) is on-demand only — no scheduled job — so it is not
+# crm_sync (Wormhole) is on-demand only — no scheduled job — so it is not
 # imported here; see AGENT_JOBS below for its roster entry.
 
 logger = logging.getLogger(__name__)
@@ -113,108 +113,108 @@ def _run_safely(job_key: str, agent_key: str, fn) -> None:
 
 def job_source_leads() -> None:
     settings = get_settings()
-    _run_safely("source_leads", "hermes", lambda s: sourcing.run_sourcing_sweep(s, settings))
+    _run_safely("source_leads", "voyager", lambda s: sourcing.run_sourcing_sweep(s, settings))
 
 
 def job_generate_drafts() -> None:
     settings = get_settings()
-    _run_safely("generate_drafts", "peitho", lambda s: outreach.generate_pending_drafts(s, settings))
+    _run_safely("generate_drafts", "beacon", lambda s: outreach.generate_pending_drafts(s, settings))
 
 
 def job_generate_followups() -> None:
     settings = get_settings()
     _run_safely(
-        "generate_followups", "peitho", lambda s: outreach.generate_followups_for_stale_conversations(s, settings)
+        "generate_followups", "beacon", lambda s: outreach.generate_followups_for_stale_conversations(s, settings)
     )
 
 
 def job_poll_replies() -> None:
     settings = get_settings()
-    _run_safely("poll_replies", "peitho", lambda s: conversation.poll_and_process_replies(s, settings))
+    _run_safely("poll_replies", "beacon", lambda s: conversation.poll_and_process_replies(s, settings))
 
 
 def job_send_digest() -> None:
     settings = get_settings()
-    _run_safely("send_digest", "iris", lambda s: notify.send_owner_digest(s, settings))
+    _run_safely("send_digest", "relay", lambda s: notify.send_owner_digest(s, settings))
 
 
 def job_run_scanner_sweep() -> None:
     settings = get_settings()
-    _run_safely("run_scanner_sweep", "momus", lambda s: scanner.run_scanner_sweep(s, settings))
+    _run_safely("run_scanner_sweep", "spectrum", lambda s: scanner.run_scanner_sweep(s, settings))
 
 
 def job_check_referral_reviews_due() -> None:
     settings = get_settings()
-    _run_safely("check_referral_reviews_due", "philotes", lambda s: referrals.check_referral_reviews_due(s, settings))
+    _run_safely("check_referral_reviews_due", "constellation", lambda s: referrals.check_referral_reviews_due(s, settings))
 
 
 def job_generate_ads_brief() -> None:
     settings = get_settings()
-    _run_safely("generate_ads_brief", "pheme", lambda s: ads.generate_monthly_brief(s, settings))
+    _run_safely("generate_ads_brief", "orbit", lambda s: ads.generate_monthly_brief(s, settings))
 
 
 def job_generate_content_extract() -> None:
     settings = get_settings()
-    _run_safely("generate_content_extract", "athena", lambda s: content.generate_quarterly_extract(s, settings))
+    _run_safely("generate_content_extract", "observatory", lambda s: content.generate_quarterly_extract(s, settings))
 
 
 def job_compute_metrics_snapshot() -> None:
-    _run_safely("compute_metrics_snapshot", "athena", lambda s: metrics.compute_and_store_snapshot(s))
+    _run_safely("compute_metrics_snapshot", "observatory", lambda s: metrics.compute_and_store_snapshot(s))
 
 
 def job_run_onboarding_sweep() -> None:
     settings = get_settings()
-    _run_safely("run_onboarding_sweep", "demeter", lambda s: onboarding.run_onboarding_sweep(s, settings))
+    _run_safely("run_onboarding_sweep", "launchpad", lambda s: onboarding.run_onboarding_sweep(s, settings))
 
 
 def job_run_billing_sweep() -> None:
     settings = get_settings()
-    _run_safely("run_billing_sweep", "plutus", lambda s: billing.run_billing_sweep(s, settings))
+    _run_safely("run_billing_sweep", "equinox", lambda s: billing.run_billing_sweep(s, settings))
 
 
 def job_check_review_requests_due() -> None:
     settings = get_settings()
-    _run_safely("check_review_requests_due", "echo", lambda s: reviews.check_review_requests_due(s, settings))
+    _run_safely("check_review_requests_due", "radiance", lambda s: reviews.check_review_requests_due(s, settings))
 
 
 def job_check_case_study_candidates() -> None:
     settings = get_settings()
-    _run_safely("check_case_study_candidates", "nike", lambda s: case_studies.check_case_study_candidates(s, settings))
+    _run_safely("check_case_study_candidates", "zenith", lambda s: case_studies.check_case_study_candidates(s, settings))
 
 
 def job_check_deliverability() -> None:
     settings = get_settings()
-    _run_safely("check_deliverability", "argus", lambda s: deliverability.check_deliverability(s, settings))
+    _run_safely("check_deliverability", "sentinel", lambda s: deliverability.check_deliverability(s, settings))
 
 
 def job_check_winback_due() -> None:
     settings = get_settings()
-    _run_safely("check_winback_due", "persephone", lambda s: winback.check_winback_due(s, settings))
+    _run_safely("check_winback_due", "gravity", lambda s: winback.check_winback_due(s, settings))
 
 
 def job_run_self_audit() -> None:
     settings = get_settings()
-    _run_safely("run_self_audit", "aletheia", lambda s: self_audit.run_self_audit(s, settings))
+    _run_safely("run_self_audit", "prism", lambda s: self_audit.run_self_audit(s, settings))
 
 
 def job_check_creative_fatigue() -> None:
     settings = get_settings()
-    _run_safely("check_creative_fatigue", "chloris", lambda s: creative_refresh.check_creative_fatigue(s, settings))
+    _run_safely("check_creative_fatigue", "nova", lambda s: creative_refresh.check_creative_fatigue(s, settings))
 
 
 def job_check_churn_risk() -> None:
     settings = get_settings()
-    _run_safely("check_churn_risk", "nemesis", lambda s: churn_watch.check_churn_risk(s, settings))
+    _run_safely("check_churn_risk", "collision", lambda s: churn_watch.check_churn_risk(s, settings))
 
 
 def job_send_monthly_rollup() -> None:
     settings = get_settings()
-    _run_safely("send_monthly_rollup", "chronos", lambda s: ops_rollup.send_monthly_rollup(s, settings))
+    _run_safely("send_monthly_rollup", "epoch", lambda s: ops_rollup.send_monthly_rollup(s, settings))
 
 
 def job_system_health_check() -> None:
     settings = get_settings()
-    _run_safely("system_health_check", "hephaestus", lambda s: system_health.run_system_check(s, settings))
+    _run_safely("system_health_check", "core", lambda s: system_health.run_system_check(s, settings))
 
 
 JOB_FUNCTIONS = {
@@ -245,14 +245,16 @@ JOB_FUNCTIONS = {
 # The "AI employee" roster shown on /team — each row maps a named agent to
 # the real scheduled job(s) behind it. `key` is what agent_toggles keys off
 # of; `job_id` is the representative scheduler job shown for "next run"
-# (an agent that backs several jobs, like Peitho, shows just one).
+# (an agent that backs several jobs, like Beacon, shows just one). Every
+# agent is named after something in the sky — the company is the universe,
+# so the naming pool is effectively unlimited, unlike a finite pantheon.
 AGENT_JOBS = [
     {
-        "key": "hermes",
-        "name": "Hermes",
+        "key": "voyager",
+        "name": "Voyager",
         "role": "Sourcing",
         "description": (
-            "Searches Apollo against your ICP and scores new candidates daily. For Vibe "
+            "Searches Apollo.io against your ICP and scores new candidates daily. For Vibe "
             "Prospecting (Explorium) — richer targeting, but credit-metered and confirm-"
             "before-export by design — a person runs the search from a Sourcing request "
             "and imports the CSV; see the Sourcing page."
@@ -260,164 +262,213 @@ AGENT_JOBS = [
         "job_id": "source_leads",
     },
     {
-        "key": "momus",
-        "name": "Momus",
+        "key": "spectrum",
+        "name": "Spectrum",
         "role": "Broken-Funnel Scanner (manual §8)",
         "description": "Passively checks queued prospect sites (speed, mobile, tracking, click-to-call) weekly and flags what needs a human's eyes.",
         "job_id": "run_scanner_sweep",
     },
     {
-        "key": "peitho",
-        "name": "Peitho",
+        "key": "beacon",
+        "name": "Beacon",
         "role": "Outreach + conversation (manual §9)",
         "description": "Drafts first-touch and follow-up emails, polls for replies, classifies intent. Also drafts SMS and one-way voice messages (Twilio + ElevenLabs) on demand from a lead's page once they have a phone number on file — everything queues for approval.",
         "job_id": "generate_drafts",
     },
     {
-        "key": "themis",
-        "name": "Themis",
+        "key": "horizon",
+        "name": "Horizon",
         "role": "Client intake",
         "description": "On-demand: turns a discovery-call note dump into a structured client record and an action plan.",
         "job_id": None,
     },
     {
-        "key": "philotes",
-        "name": "Philotes",
+        "key": "constellation",
+        "name": "Constellation",
         "role": "Referral engine (manual §11)",
         "description": "Watches for 90-day-review dates and drafts the ask script + forwardable intro message.",
         "job_id": "check_referral_reviews_due",
     },
     {
-        "key": "pheme",
-        "name": "Pheme",
+        "key": "orbit",
+        "name": "Orbit",
         "role": "Ads planner (manual §4/§6/§14)",
         "description": "Generates the monthly campaign brief (budget, audience, ad copy) from the budget calendar. Publishing stays manual.",
         "job_id": "generate_ads_brief",
     },
     {
-        "key": "athena",
-        "name": "Athena",
+        "key": "observatory",
+        "name": "Observatory",
         "role": "Measurement + content (manual §12/§15)",
         "description": "Computes the six KPIs daily and drafts the quarterly benchmark-report extract.",
         "job_id": "compute_metrics_snapshot",
     },
     {
-        "key": "iris",
-        "name": "Iris",
+        "key": "relay",
+        "name": "Relay",
         "role": "Notifications",
         "description": "Sends the daily owner/team digest and immediate pings for booked meetings.",
         "job_id": "send_digest",
     },
     {
-        "key": "demeter",
-        "name": "Demeter",
+        "key": "launchpad",
+        "name": "Launchpad",
         "role": "Client onboarding & delivery",
         "description": "Plants the onboarding checklist the moment a client goes active — kickoff, tracking, first campaign, booking-flow test, 30-day check-in.",
         "job_id": "run_onboarding_sweep",
     },
     {
-        "key": "plutus",
-        "name": "Plutus",
+        "key": "equinox",
+        "name": "Equinox",
         "role": "Billing & invoicing",
         "description": "Flags each active client's monthly invoice as due, and escalates if last month's is still unconfirmed. No payment processor wired in — this is the reminder layer.",
         "job_id": "run_billing_sweep",
     },
     {
-        "key": "echo",
-        "name": "Echo",
+        "key": "radiance",
+        "name": "Radiance",
         "role": "Reputation & reviews",
         "description": "Nudges for a review 60 days into a client relationship, and drafts a reply for any review you paste in.",
         "job_id": "check_review_requests_due",
     },
     {
-        "key": "nike",
-        "name": "Nike",
+        "key": "zenith",
+        "name": "Zenith",
         "role": "Case study builder",
         "description": "Once a client has 90 days of real results, drafts the case study — manual §1's single most persuasive asset.",
         "job_id": "check_case_study_candidates",
     },
     {
-        "key": "metis",
-        "name": "Metis",
+        "key": "telescope",
+        "name": "Telescope",
         "role": "Meeting prep",
         "description": "On-demand: pulls a prospect's site into a one-page pre-call brief before a discovery call.",
         "job_id": None,
     },
     {
-        "key": "dike",
-        "name": "Dike",
+        "key": "axis",
+        "name": "Axis",
         "role": "Proposals & contracts",
-        "description": "Turns Themis's intake recommendation into a ready-to-send proposal — scope, price, the booked-job-floor guarantee.",
+        "description": "Turns Horizon's intake recommendation into a ready-to-send proposal — scope, price, the booked-job-floor guarantee.",
         "job_id": None,
     },
     {
-        "key": "argus",
-        "name": "Argus",
+        "key": "sentinel",
+        "name": "Sentinel",
         "role": "Deliverability watch",
         "description": "Watches send-volume trend and Gmail token health — the hard ceiling on how fast outbound can scale.",
         "job_id": "check_deliverability",
     },
     {
-        "key": "eris",
-        "name": "Eris",
+        "key": "eclipse",
+        "name": "Eclipse",
         "role": "Competitor watch",
         "description": "On-demand: log a competitor's ad, get it run through the manual's own differentiation test.",
         "job_id": None,
     },
     {
-        "key": "persephone",
-        "name": "Persephone",
+        "key": "gravity",
+        "name": "Gravity",
         "role": "Win-back",
         "description": "Six weeks after a decline, drafts a low-pressure referral ask — manual §11's most overlooked source.",
         "job_id": "check_winback_due",
     },
     {
-        "key": "aletheia",
-        "name": "Aletheia",
+        "key": "prism",
+        "name": "Prism",
         "role": "Self-audit",
-        "description": "Runs Momus's own checks against Aurora's own site — 'we use our own product' has to stay true.",
+        "description": "Runs Spectrum's own checks against Aurora's own site — 'we use our own product' has to stay true.",
         "job_id": "run_self_audit",
     },
     {
-        "key": "chloris",
-        "name": "Chloris",
+        "key": "nova",
+        "name": "Nova",
         "role": "Creative fatigue watch",
         "description": "Flags any ad campaign running past 3-4 weeks, per manual §6 — performance quietly degrades past that.",
         "job_id": "check_creative_fatigue",
     },
     {
-        "key": "nemesis",
-        "name": "Nemesis",
+        "key": "collision",
+        "name": "Collision",
         "role": "Churn early-warning",
         "description": "Flags an active client that's gone quiet for 60+ days, before it shows up as a missed payment.",
         "job_id": "check_churn_risk",
     },
     {
-        "key": "astraea",
-        "name": "Astraea",
+        "key": "parallax",
+        "name": "Parallax",
         "role": "Pricing benchmark",
         "description": "On-demand: log a competitor's pricing, get it checked against Aurora's own positioning.",
         "job_id": None,
     },
     {
-        "key": "chronos",
-        "name": "Chronos",
+        "key": "epoch",
+        "name": "Epoch",
         "role": "Monthly ops rollup",
-        "description": "A once-a-month management view — what's aging on the board, by category. Distinct cadence from Iris's daily digest on purpose.",
+        "description": "A once-a-month management view — what's aging on the board, by category. Distinct cadence from Relay's daily digest on purpose.",
         "job_id": "send_monthly_rollup",
     },
     {
-        "key": "hephaestus",
-        "name": "Hephaestus",
+        "key": "core",
+        "name": "Core",
         "role": "System health",
         "description": "Checks configuration completeness, dependency drift, and whether every other agent's last run actually succeeded — alerts immediately, not just in a digest.",
         "job_id": "system_health_check",
     },
     {
-        "key": "charon",
-        "name": "Charon",
+        "key": "wormhole",
+        "name": "Wormhole",
         "role": "CRM handoff",
-        "description": "On-demand: paste in a lead or client's details and Charon extracts the contact fields and pushes them straight into that client's own CRM (HubSpot, Monday.com, GoHighLevel).",
+        "description": "On-demand: paste in a lead or client's details and Wormhole extracts the contact fields and pushes them straight into that client's own CRM (HubSpot, Monday.com, GoHighLevel).",
+        "job_id": None,
+    },
+    {
+        "key": "pulsar",
+        "name": "Pulsar",
+        "role": "Social media",
+        "description": "On-demand: drafts organic social post copy/captions for a given campaign or recent case study, queued for approval like outreach drafts are.",
+        "job_id": None,
+    },
+    {
+        "key": "quasar",
+        "name": "Quasar",
+        "role": "High-impact campaigns",
+        "description": "On-demand: spots a small number of high-leverage campaign opportunities from recent metrics/campaign data and raises them for the team to review — an opportunity spotter, not a full campaign builder.",
+        "job_id": None,
+    },
+    {
+        "key": "comet",
+        "name": "Comet",
+        "role": "Trend detection",
+        "description": "On-demand: scans recent metric history for a directional trend (a KPI moving the same way several periods running) and flags it once it crosses a threshold.",
+        "job_id": None,
+    },
+    {
+        "key": "nebula",
+        "name": "Nebula",
+        "role": "Content generation",
+        "description": "On-demand: drafts long-form content (a blog post or newsletter section) from a template plus recent case-study or metric data, queued for review.",
+        "job_id": None,
+    },
+    {
+        "key": "apollo",
+        "name": "Apollo",
+        "role": "Production (video/photo)",
+        "description": "On-demand: builds a production checklist (shot list, deliverables, deadline) when a campaign needs video/photo content — backs the Content Production capability on the Aurora website.",
+        "job_id": None,
+    },
+    {
+        "key": "starlight",
+        "name": "Starlight",
+        "role": "Brand identity",
+        "description": "On-demand: reviews a client's current brand assets/voice for consistency and raises what it finds.",
+        "job_id": None,
+    },
+    {
+        "key": "supernova",
+        "name": "Supernova",
+        "role": "Campaign launch",
+        "description": "On-demand: assembles a go-live checklist (assets, targeting, budget confirmation) the moment a campaign is marked ready to publish.",
         "job_id": None,
     },
 ]

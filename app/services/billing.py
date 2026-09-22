@@ -1,4 +1,4 @@
-"""Plutus — billing & invoicing. No payment processor is wired in (Stripe/
+"""Equinox — billing & invoicing. No payment processor is wired in (Stripe/
 QuickBooks/etc. would be the real integration point); this is the honest
 version: a monthly reminder task per active client, and an escalation if
 last month's still isn't marked done. Never drafts anything client-facing —
@@ -39,7 +39,7 @@ def run_billing_sweep(session: Session, settings=None) -> dict[str, int]:
                 description=f"${client.monthly_fee:,.2f} due for {this_month}.",
                 category=ActionCategory.BILLING.value,
                 client_id=client.id,
-                created_by="agent:plutus",
+                created_by="agent:equinox",
             )
             stats["invoices_flagged"] += 1
 
@@ -63,7 +63,7 @@ def run_billing_sweep(session: Session, settings=None) -> dict[str, int]:
                     description=f"'{overdue.title}' is still open. Check payment status before it slips further.",
                     category=ActionCategory.BILLING.value,
                     client_id=client.id,
-                    created_by="agent:plutus",
+                    created_by="agent:equinox",
                 )
                 stats["overdue_flagged"] += 1
 

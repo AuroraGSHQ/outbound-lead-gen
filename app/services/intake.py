@@ -1,4 +1,4 @@
-"""The Concierge agent: turns raw discovery/intro-call notes into a
+"""The Horizon agent: turns raw discovery/intro-call notes into a
 structured client record and a concrete, partly-automated action plan. This
 is the direct answer to "after the client introduction call, enter in the
 details and either have the actions automatically performed or the steps
@@ -95,7 +95,7 @@ def create_intake(
             auto_executable=auto_executable,
             lead_id=lead.id,
             client_id=client.id,
-            created_by="agent:concierge",
+            created_by="agent:horizon",
         )
         if auto_executable:
             actions.execute_action_item(session, settings, item.id)

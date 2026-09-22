@@ -1,4 +1,4 @@
-"""Charon — CRM handoff. Parses pasted lead/client details into structured
+"""Wormhole — CRM handoff. Parses pasted lead/client details into structured
 contact fields, then pushes them into whichever CRM that specific client
 uses. Each client's CRM connection (provider, API key, board/location id,
 column mapping) is configured once on the client record — nothing here

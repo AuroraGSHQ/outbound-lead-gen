@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Measurement</h1>
-<p class="meta">The six numbers manual §15 says matter — everything else is decoration. Computed daily by the Analyst agent.</p>
+<p class="meta">The six numbers manual §15 says matter — everything else is decoration. Computed daily by the Observatory agent.</p>
 
 {% if history %}
 {% set latest = history[0] %}
@@ -42,6 +42,6 @@
   {% endfor %}
 </table>
 {% else %}
-<p>No snapshots yet — the Analyst agent computes one daily, or trigger it from the Team page.</p>
+<p>No snapshots yet — the Observatory agent computes one daily, or trigger it from the Team page.</p>
 {% endif %}
 {% endblock %}

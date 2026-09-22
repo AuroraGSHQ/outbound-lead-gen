@@ -1,5 +1,5 @@
-"""Nemesis — churn early-warning. Flags an active client going quiet
-before it shows up as a missed payment. Raises a flag only — Plutus
+"""Collision — churn early-warning. Flags an active client going quiet
+before it shows up as a missed payment. Raises a flag only — Equinox
 (billing) or a human is still the one who ever moves Client.status to
 paused/churned, so the two can't race to change the same field.
 """
@@ -49,7 +49,7 @@ def check_churn_risk(session: Session, settings=None) -> dict[str, int]:
             description=f"No recorded activity for this client since {last_touch.date().isoformat()}.",
             category=ActionCategory.CHURN.value,
             client_id=client.id,
-            created_by="agent:nemesis",
+            created_by="agent:collision",
         )
         stats["flags_raised"] += 1
 

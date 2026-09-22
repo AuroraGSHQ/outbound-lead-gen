@@ -1,4 +1,4 @@
-"""Nike — case study builder. Manual §1: "a result from a business exactly
+"""Zenith — case study builder. Manual §1: "a result from a business exactly
 like theirs, with the numbers shown" is the single most persuasive thing
 Aurora has. Once a client's been active long enough to have a real before/
 after story, this drafts it for review — never publishes on its own.
@@ -57,7 +57,7 @@ def check_case_study_candidates(session: Session, settings: Settings) -> dict[st
             description="Drafted from the client's logged notes/metrics — verify the numbers before publishing.",
             category=ActionCategory.CONTENT.value,
             client_id=client.id,
-            created_by="agent:nike",
+            created_by="agent:zenith",
         )
         item.result = markdown
         session.commit()

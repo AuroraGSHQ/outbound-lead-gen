@@ -1,7 +1,7 @@
-"""Demeter — client onboarding & delivery. Once a client goes active, this
+"""Launchpad — client onboarding & delivery. Once a client goes active, this
 plants the standard onboarding checklist as ActionItems (category=onboarding)
 so nothing about getting them live gets forgotten. Picks up exactly where
-Themis (intake) leaves off — it never touches a lead that hasn't signed.
+Horizon (intake) leaves off — it never touches a lead that hasn't signed.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def create_onboarding_checklist(session: Session, client: Client) -> list[Action
             title=f"Onboarding — {client.company_name}: {title}",
             category=ActionCategory.ONBOARDING.value,
             client_id=client.id,
-            created_by="agent:demeter",
+            created_by="agent:launchpad",
             due_at=due,
         )
         items.append(item)

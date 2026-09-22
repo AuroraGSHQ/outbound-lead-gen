@@ -1,8 +1,8 @@
-"""Metis — meeting prep. On-demand only (there's no calendar integration
+"""Telescope — meeting prep. On-demand only (there's no calendar integration
 telling it when a call is coming up): a salesperson triggers it before a
-call and gets a one-pager back. Reuses Momus's passive site checks for its
+call and gets a one-pager back. Reuses Spectrum's passive site checks for its
 own internal prep purposes only — this never creates a ScanResult and never
-appears in Momus's prospect list, so the two can't get confused for each
+appears in Spectrum's prospect list, so the two can't get confused for each
 other.
 """
 from __future__ import annotations
@@ -65,7 +65,7 @@ def prep_meeting_brief(session: Session, settings: Settings, lead_id: int) -> Ac
         title=f"Meeting brief — {lead.company_name}",
         category=ActionCategory.ADMIN.value,
         lead_id=lead.id,
-        created_by="agent:metis",
+        created_by="agent:telescope",
     )
     item.result = brief
     session.commit()

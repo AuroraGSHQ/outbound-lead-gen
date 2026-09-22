@@ -1,4 +1,4 @@
-"""The Analyst agent's content half: manual §12's quarterly benchmark-report
+"""The Observatory agent's content half: manual §12's quarterly benchmark-report
 extract, drafted from real aggregated metrics and queued for owner review —
 never auto-published, since a single self-serving conclusion in this asset
 "destroys that perception permanently" per the manual.
@@ -50,12 +50,12 @@ def generate_quarterly_extract(session: Session, settings: Settings) -> dict[str
         session,
         title="Review this quarter's benchmark report extract",
         description=(
-            "Drafted by the Analyst agent from real metrics. Review for accuracy "
+            "Drafted by the Observatory agent from real metrics. Review for accuracy "
             "and honesty (manual §12) before publishing anywhere external."
         ),
         category=ActionCategory.CONTENT.value,
         auto_executable=False,
-        created_by="agent:analyst",
+        created_by="agent:observatory",
     )
     item.result = markdown
     session.commit()

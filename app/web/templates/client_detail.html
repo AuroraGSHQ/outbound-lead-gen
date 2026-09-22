@@ -20,11 +20,11 @@
   </form>
   <p class="meta">{{ client.notes }}</p>
   <form method="post" action="/clients/{{ client.id }}/proposal">
-    <button type="submit" class="secondary">Dike: generate proposal</button>
+    <button type="submit" class="secondary">Axis: generate proposal</button>
   </form>
 </div>
 
-<h2>CRM connection — Charon</h2>
+<h2>CRM connection — Wormhole</h2>
 <div class="card">
   <p class="meta">Currently: <strong>{{ client.crm_provider }}</strong>{% if client.crm_provider != 'none' %} — leads pasted on the <a href="/crm-sync">CRM Sync</a> page for this client push here.{% endif %}</p>
   <form method="post" action="/clients/{{ client.id }}/crm-config">

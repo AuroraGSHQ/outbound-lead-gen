@@ -1,4 +1,4 @@
-"""The Connector agent: manual §11's referral engine. Detects when a
+"""The Constellation agent: manual §11's referral engine. Detects when a
 client's 90-day review is due, drafts the ask script + forwardable intro
 message so the actual conversation is easy to have (holding it stays a human
 step — this only removes "what do I even say"), and tracks the outcome
@@ -84,7 +84,7 @@ def check_referral_reviews_due(session: Session, settings: Settings) -> dict[str
             category=ActionCategory.REFERRAL.value,
             auto_executable=True,
             client_id=client.id,
-            created_by="agent:connector",
+            created_by="agent:constellation",
         )
         item.result = result_text
         session.commit()

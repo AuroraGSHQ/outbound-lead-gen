@@ -1,4 +1,4 @@
-"""Hephaestus — system health. Not part of the sales/marketing pipeline at
+"""Core — system health. Not part of the sales/marketing pipeline at
 all: this watches the machine itself. It checks that required configuration
 is present, that every scheduled agent's last run actually succeeded (not
 just that it's scheduled — see JobRun, written by scheduler._run_safely),
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def _check_config(settings: Settings) -> list[str]:
     problems = list(settings.require_for_sending())
     if not settings.apollo_api_key:
-        problems.append("APOLLO_API_KEY is not set — Hermes (sourcing) can't run")
+        problems.append("APOLLO_API_KEY is not set — Voyager (sourcing) can't run")
     if not settings.calendly_webhook_signing_key:
         problems.append("CALENDLY_WEBHOOK_SIGNING_KEY is not set — booked meetings won't be recorded")
     return problems
@@ -78,7 +78,7 @@ def run_system_check(session: Session, settings: Settings) -> dict[str, int]:
     problems += [f"Agent failure: {p}" for p in _check_job_health(session)]
 
     stats = {"problems_found": len(problems), "alerts_sent": 0}
-    title = "Hephaestus: system health issues found"
+    title = "Core: system health issues found"
     existing = (
         session.query(ActionItem)
         .filter(ActionItem.title == title, ActionItem.status != ActionStatus.DONE.value)
@@ -105,7 +105,7 @@ def run_system_check(session: Session, settings: Settings) -> dict[str, int]:
             title=title,
             description=body,
             category=ActionCategory.SYSTEM.value,
-            created_by="agent:hephaestus",
+            created_by="agent:core",
         )
 
     notify_system_alert(session, settings, title, body)

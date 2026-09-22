@@ -1,4 +1,4 @@
-"""ElevenLabs — text-to-speech for Peitho's voice channel. Turns a drafted,
+"""ElevenLabs — text-to-speech for Beacon's voice channel. Turns a drafted,
 approved call script into an MP3 saved to disk, which Twilio then fetches
 and plays on the outbound call (see app/integrations/twilio_sms.py).
 """

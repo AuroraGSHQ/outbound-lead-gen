@@ -1,4 +1,4 @@
-"""Eris (competitor watch) & Astraea (pricing benchmark) — both on-demand,
+"""Eclipse (competitor watch) & Parallax (pricing benchmark) — both on-demand,
 both writing to the same CompetitorNote table, split only by `note_type`.
 There's no ad-transparency or scraping API here: a person logs what they
 saw (an ad, a pricing page), and Claude runs it through the manual's own

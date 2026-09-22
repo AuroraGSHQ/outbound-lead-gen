@@ -1,7 +1,7 @@
-"""Aletheia — self-audit. The manual's sales pitch leans on "we use our own
-product" — that has to stay true. Runs the same passive checks Momus
+"""Prism — self-audit. The manual's sales pitch leans on "we use our own
+product" — that has to stay true. Runs the same passive checks Spectrum
 (scanner) runs on prospects, but against Aurora's own site (OWN_DOMAIN in
-.env), and never creates a ScanResult or feeds Momus's prospect list —
+.env), and never creates a ScanResult or feeds Spectrum's prospect list —
 purely a truth check on ourselves.
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def run_self_audit(session: Session, settings: Settings) -> dict[str, int]:
     stats = {"faults_found": 0}
     if not settings.own_domain:
-        logger.info("OWN_DOMAIN not set — Aletheia has nothing to check.")
+        logger.info("OWN_DOMAIN not set — Prism has nothing to check.")
         return stats
 
     check = check_site(settings.own_domain)
@@ -50,7 +50,7 @@ def run_self_audit(session: Session, settings: Settings) -> dict[str, int]:
         title=title,
         description="; ".join(faults) + " — the same faults we'd flag on a prospect.",
         category=ActionCategory.SYSTEM.value,
-        created_by="agent:aletheia",
+        created_by="agent:prism",
     )
     stats["faults_found"] = len(faults)
     logger.info("Self-audit complete: %s", stats)

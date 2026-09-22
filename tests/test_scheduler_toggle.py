@@ -32,7 +32,7 @@ def _job_runs(factory, job_key):
 
 def test_run_safely_executes_and_records_success(isolated_session_factory):
     calls = []
-    scheduler._run_safely("test_job", "themis", lambda s: calls.append(1) or "ok")
+    scheduler._run_safely("test_job", "horizon", lambda s: calls.append(1) or "ok")
 
     assert calls == [1]
     runs = _job_runs(isolated_session_factory, "test_job")
@@ -42,11 +42,11 @@ def test_run_safely_executes_and_records_success(isolated_session_factory):
 
 def test_run_safely_skips_when_agent_disabled(isolated_session_factory):
     session = isolated_session_factory()
-    agent_toggles.set_enabled(session, "themis", False)
+    agent_toggles.set_enabled(session, "horizon", False)
     session.close()
 
     calls = []
-    scheduler._run_safely("test_job", "themis", lambda s: calls.append(1))
+    scheduler._run_safely("test_job", "horizon", lambda s: calls.append(1))
 
     assert calls == []  # never invoked
     runs = _job_runs(isolated_session_factory, "test_job")
@@ -58,7 +58,7 @@ def test_run_safely_records_error_and_does_not_raise(isolated_session_factory):
     def _boom(session):
         raise RuntimeError("kaboom")
 
-    scheduler._run_safely("test_job", "themis", _boom)  # must not raise
+    scheduler._run_safely("test_job", "horizon", _boom)  # must not raise
 
     runs = _job_runs(isolated_session_factory, "test_job")
     assert len(runs) == 1

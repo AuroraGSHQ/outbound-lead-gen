@@ -22,16 +22,16 @@
     <td><a href="/intake/new?lead_id={{ lead.id }}">Start intake →</a></td>
     <td>
       <form method="post" action="/leads/{{ lead.id }}/recon">
-        <button type="submit" class="secondary">Metis: prep brief</button>
+        <button type="submit" class="secondary">Telescope: prep brief</button>
       </form>
     </td>
     <td>
       {% if lead.contact_phone %}
       <form method="post" action="/leads/{{ lead.id }}/draft-sms" style="display:inline;">
-        <button type="submit" class="secondary">Peitho: draft SMS</button>
+        <button type="submit" class="secondary">Beacon: draft SMS</button>
       </form>
       <form method="post" action="/leads/{{ lead.id }}/draft-call" style="display:inline;">
-        <button type="submit" class="secondary">Peitho: draft call</button>
+        <button type="submit" class="secondary">Beacon: draft call</button>
       </form>
       {% else %}
       <span class="meta">Add a phone number to text/call</span>

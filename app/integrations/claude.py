@@ -227,7 +227,7 @@ class ClaudeDrafter:
     def analyze_intro_call(
         self, notes: str, lead: dict[str, Any], profile: BusinessProfile
     ) -> dict[str, Any]:
-        """The Concierge agent's core call: turn raw discovery-call notes into
+        """The Horizon agent's core call: turn raw discovery-call notes into
         a structured client picture plus a concrete next-steps plan.
 
         Each next step names a `handler` key. `auto_executable=true` only
@@ -367,7 +367,7 @@ class ClaudeDrafter:
         return {"subject": data.get("subject", ""), "body": data.get("body", "")}
 
     def draft_case_study(self, client: dict[str, Any], metrics_summary: str, profile: BusinessProfile) -> str:
-        """Nike: a case-study draft from one client's real before/after
+        """Zenith: a case-study draft from one client's real before/after
         numbers — manual §1's top item in the hierarchy of persuasion."""
         system = (
             "Write a short case study (under 350 words, markdown) for one client: "
@@ -387,7 +387,7 @@ class ClaudeDrafter:
     def draft_proposal_document(
         self, client: dict[str, Any], tier: str, context: str, profile: BusinessProfile
     ) -> str:
-        """Dike: a structured proposal — scope, price, the booked-job-floor
+        """Axis: a structured proposal — scope, price, the booked-job-floor
         guarantee (manual §2's risk-reversal layer) — from the intake plan."""
         system = (
             "Write a short client proposal (under 400 words, markdown) with these "
@@ -406,7 +406,7 @@ class ClaudeDrafter:
         return "".join(block.text for block in resp.content if block.type == "text")
 
     def draft_review_response(self, review_text: str, rating: str, profile: BusinessProfile) -> str:
-        """Echo: a public reply to a review, ready to paste into Google/
+        """Radiance: a public reply to a review, ready to paste into Google/
         Facebook by hand (no review-platform API is wired up)."""
         system = (
             "Write a short public reply to this customer review, in the voice of "
@@ -423,7 +423,7 @@ class ClaudeDrafter:
     def draft_competitor_analysis(
         self, competitor_name: str, observed_text: str, note_type: str, profile: BusinessProfile
     ) -> str:
-        """Eris / Astraea: run a logged competitor observation through the
+        """Eclipse / Parallax: run a logged competitor observation through the
         manual's own differentiation test ('cover your logo')."""
         system = (
             "You're checking a competitor's ad or pricing against the 'cover your "
@@ -445,7 +445,7 @@ class ClaudeDrafter:
     def draft_meeting_brief(
         self, lead: dict[str, Any], site_findings: str, profile: BusinessProfile
     ) -> str:
-        """Metis: a one-page pre-call brief so whoever's on the discovery
+        """Telescope: a one-page pre-call brief so whoever's on the discovery
         call walks in already knowing the shape of the business."""
         system = (
             "Write a one-page pre-call brief (under 300 words, markdown) for "
@@ -467,7 +467,7 @@ class ClaudeDrafter:
         return "".join(block.text for block in resp.content if block.type == "text")
 
     def parse_lead_details(self, raw_text: str) -> dict[str, str]:
-        """Charon: turn arbitrary pasted text (an email, a form dump, call
+        """Wormhole: turn arbitrary pasted text (an email, a form dump, call
         notes) into structured CRM contact fields. Never invents a value —
         a field that isn't actually in the text comes back empty."""
         system = (
@@ -505,3 +505,80 @@ class ClaudeDrafter:
         )
         data = self._complete_json(system, user)
         return {"subject": data.get("subject", ""), "body": data.get("body", "")}
+
+    def draft_social_caption(
+        self, client: dict[str, Any], context: str, platform: str, profile: BusinessProfile
+    ) -> dict[str, str]:
+        """Pulsar: an organic social post drafted from a client's own real
+        result or a recent campaign — not paid ad copy (that's Orbit's
+        draft_ad_copy), and queued for approval the same way outreach is."""
+        system = (
+            f"Write one organic {platform} post for a home-services growth agency to "
+            "post on its own account, built around a specific, real result. Plain "
+            "language, no hashtag spam (at most 2-3 relevant ones), no generic agency "
+            "language. Under 150 words. "
+            'Respond with ONLY JSON: {"caption": "..."}.'
+        )
+        user = (
+            f"What to feature: {client.get('company_name', 'a client')}.\n"
+            f"Context/result: {context}\n\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}"
+        )
+        data = self._complete_json(system, user, max_tokens=512)
+        return {"caption": data.get("caption", "")}
+
+    def draft_longform_content(self, topic: str, context: str, profile: BusinessProfile) -> str:
+        """Nebula: a blog post / newsletter section — distinct from Observatory's
+        quarterly benchmark-report extract (draft_content_extract), which is
+        strictly metrics-grounded. This can be built from a case study, a
+        theme, or general context."""
+        system = (
+            "Write a short blog post or newsletter section (under 500 words, "
+            "markdown, with a heading) for a home-services growth agency's own "
+            "site/newsletter. Specific and useful over promotional. No generic "
+            "agency language ('full-service', 'results-driven', 'tailored "
+            "solutions'). Respond with markdown only, no JSON, no code fence."
+        )
+        user = f"Topic: {topic}\nContext to draw on: {context}\n\nPublisher: {profile.business_name}. {profile.business_pitch}"
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=1024, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_production_brief(self, campaign: dict[str, Any], profile: BusinessProfile) -> str:
+        """Apollo: a shot list / production checklist for the video or photo
+        content a campaign needs — not the ad copy itself (that's already on
+        the AdCampaign row), just what has to get filmed/shot and delivered."""
+        system = (
+            "Write a short production brief (under 250 words, markdown) for the "
+            "video/photo content a marketing campaign needs: a shot list (bulleted), "
+            "a deliverables list (formats/lengths/aspect ratios), and anything the "
+            "crew needs to know before the shoot. Plain and concrete, no filler. "
+            "Respond with markdown only, no JSON, no code fence."
+        )
+        user = (
+            f"Platform: {campaign.get('platform')}\nCampaign angle/creative: {campaign.get('creative')}\n"
+            f"My business: {profile.business_name}. What we do: {profile.business_pitch}"
+        )
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=512, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text")
+
+    def draft_brand_review(self, client: dict[str, Any], brand_notes: str, profile: BusinessProfile) -> str:
+        """Starlight: a lightweight brand-consistency review — voice and
+        asset consistency against what's on file for the client, not a full
+        brand audit engagement."""
+        system = (
+            "You're reviewing a client's brand voice/asset consistency for a growth "
+            "agency's internal use. In under 150 words, note anything inconsistent "
+            "(tone, visual identity, messaging) across what's described, and one "
+            "concrete fix. If there isn't enough information to say anything useful, "
+            "say that plainly instead of inventing findings. Respond with plain text "
+            "only."
+        )
+        user = f"Client: {client.get('company_name')}.\nWhat we have on file: {brand_notes}\n\nOur business: {profile.business_name}"
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=384, system=system, messages=[{"role": "user", "content": user}]
+        )
+        return "".join(block.text for block in resp.content if block.type == "text").strip()

@@ -1,11 +1,11 @@
-"""CSV import for leads sourced outside Apollo — currently used for Vibe
+"""CSV import for leads sourced outside Apollo.io — currently used for Vibe
 Prospecting exports (see services/sourcing_requests.py), written generically
 enough to take any CSV with a header row. No assumptions about a fixed
 export schema: `suggest_mapping` offers a best-effort guess per column, but
 the person importing confirms (or overrides) the mapping before anything is
 written — the same "don't trust it blind" posture as the rest of the app.
 
-Imported leads are scored against the same ICP (config/icp.yaml) as Apollo
+Imported leads are scored against the same ICP (config/icp.yaml) as Apollo.io
 leads, via the same app.icp.score_lead, so they enter the pipeline
 identically from that point on.
 """

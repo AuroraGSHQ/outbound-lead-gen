@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d1b2a">
-  <title>{% block title %}Olympus{% endblock %}</title>
+  <title>{% block title %}Cosmos{% endblock %}</title>
   <link rel="manifest" href="/static/manifest.webmanifest">
   <link rel="icon" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Olympus">
+  <meta name="apple-mobile-web-app-title" content="Cosmos">
   <style>
     :root { --navy: #0d1b2a; --teal: #2dc5a8; --gold: #d6a84f; }
     body { font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 880px; margin: 24px auto; color: #1a1a1a; padding: 0 16px; }
@@ -52,7 +52,7 @@
 <body>
   {% if user %}
   <header class="top">
-    <div class="brand">Olympus <span>by Aurora</span></div>
+    <div class="brand">Cosmos <span>by Aurora</span></div>
     <div class="whoami">
       {{ user.name }} ({{ user.role }})
       <form method="post" action="/logout"><button type="submit">Log out</button></form>
@@ -65,7 +65,7 @@
     <a href="/sourcing">Sourcing</a>
     <a href="/intake">Intake</a>
     <a href="/clients">Clients</a>
-    <a href="/scanner">Scanner</a>
+    <a href="/scanner">Spectrum</a>
     <a href="/ads">Ads</a>
     <a href="/referrals">Referrals</a>
     <a href="/reviews">Reviews</a>

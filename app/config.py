@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # Lead sourcing
     apollo_api_key: str = ""
 
-    # Scanner agent (optional — review-count/recency check is skipped without it)
+    # Spectrum agent (optional — review-count/recency check is skipped without it)
     google_places_api_key: str = ""
 
     # Ads agent — real publishing stays off until these are set (see
@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     google_ads_developer_token: str = ""
     meta_access_token: str = ""
 
-    # Aletheia (self-audit) — Aurora's own domain, checked with the same
-    # passive checks Momus (scanner) runs on prospects. Blank = skipped.
+    # Prism (self-audit) — Aurora's own domain, checked with the same
+    # passive checks Spectrum (scanner) runs on prospects. Blank = skipped.
     own_domain: str = ""
 
     # Gmail
@@ -38,16 +38,16 @@ class Settings(BaseSettings):
     gmail_credentials_path: str = "data/credentials.json"
     gmail_token_path: str = "data/token.json"
 
-    # Twilio (Peitho's phone channel — SMS + outbound voice)
+    # Twilio (Beacon's phone channel — SMS + outbound voice)
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_from_number: str = ""
 
-    # ElevenLabs (text-to-speech for Peitho's voice channel)
+    # ElevenLabs (text-to-speech for Beacon's voice channel)
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = ""
     voice_clip_dir: str = "data/voice_clips"
-    # Publicly reachable base URL for this app (e.g. https://olympus.up.railway.app) —
+    # Publicly reachable base URL for this app (e.g. https://cosmos.up.railway.app) —
     # Twilio fetches the synthesized voice clip from here, so it must be a real
     # internet-reachable HTTPS URL, not localhost.
     public_base_url: str = ""

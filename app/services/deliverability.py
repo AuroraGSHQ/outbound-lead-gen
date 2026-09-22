@@ -1,7 +1,7 @@
-"""Argus — deliverability watch. The hard ceiling on how fast outbound can
+"""Sentinel — deliverability watch. The hard ceiling on how fast outbound can
 scale is sending-address reputation (see docs/SETUP.md's "Sizing your
-outreach volume"), and it's the one thing nothing was watching. Argus
-checks send-volume trend and whether Peitho's (Scribe) Gmail token is
+outreach volume"), and it's the one thing nothing was watching. Sentinel
+checks send-volume trend and whether Beacon's Gmail token is
 actually usable — and only ever raises a flag. It never pauses sending or
 touches DAILY_OUTREACH_CAP itself.
 """
@@ -40,7 +40,7 @@ def _flag_once(session: Session, title: str, description: str) -> bool:
     if session.query(ActionItem).filter(ActionItem.title == title, ActionItem.status != "done").first():
         return False
     actions.create_action_item(
-        session, title=title, description=description, category=ActionCategory.SYSTEM.value, created_by="agent:argus"
+        session, title=title, description=description, category=ActionCategory.SYSTEM.value, created_by="agent:sentinel"
     )
     return True
 

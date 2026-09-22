@@ -1,4 +1,4 @@
-"""The Analyst agent's measurement half: manual §15's six numbers, computed
+"""The Observatory agent's measurement half: manual §15's six numbers, computed
 from whatever real data the app actually has (no invented attribution) and
 stored as a daily MetricSnapshot so /metrics doesn't recompute on every
 load. Where there isn't enough data to say something honest — e.g. no

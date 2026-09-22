@@ -1,4 +1,4 @@
-"""The Scanner agent (manual §8): passive site checks + scoring, plus the
+"""The Spectrum agent (manual §8): passive site checks + scoring, plus the
 human-verification step the manual insists on before any fault gets used in
 an outreach draft ("never send a fault-led message you have not personally
 verified").
@@ -121,7 +121,7 @@ def _create_verification_task(session: Session, scan: ScanResult) -> ActionItem:
         category=ActionCategory.SCANNER_VERIFY.value,
         auto_executable=False,
         status=ActionStatus.PROPOSED.value,
-        created_by="agent:scanner",
+        created_by="agent:spectrum",
         payload={"scan_result_id": scan.id, "domain": scan.domain},
     )
     session.add(item)

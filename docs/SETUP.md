@@ -12,7 +12,7 @@ Sign up at [apollo.io](https://www.apollo.io), grab an API key from
 Settings → Integrations → API, set `APOLLO_API_KEY`.
 
 **API access requires a paid plan.** A free or Professional-Trial account
-can use Apollo's own web UI to search for leads, but calling the search API
+can use Apollo.io's own web UI to search for leads, but calling the search API
 directly (what this bot does) gets rejected with `403 API_INACCESSIBLE` —
 their error message points you at apollo.io/pricing. Confirmed against the
 live API while building this: the auth itself (the request needs the key in
@@ -101,7 +101,7 @@ python scripts/create_user.py --name "Alex Rivera" --email alex@yourcompany.com 
 It'll prompt for a password interactively (never pass one on the command
 line where it'd land in shell history).
 
-## 9. Scanner agent (optional review-count check)
+## 9. Spectrum agent (optional review-count check)
 
 The Broken-Funnel Scanner (manual §8) runs its cheap/objective checks (page
 load, mobile viewport, tracking pixels, click-to-call) against any domain
@@ -113,7 +113,7 @@ key the scanner simply skips that one check and still runs everything else.
 
 ## 10. Ads agent (optional, advanced)
 
-By default the Promoter agent generates a full campaign brief every month
+By default the Orbit agent generates a full campaign brief every month
 (budget split, audience, ad copy) and hands it to you as a ready-to-paste
 package — publishing stays a two-minute manual step in Google Ads / Meta Ads
 Manager. This is deliberate: both platforms require a developer application
@@ -142,10 +142,10 @@ until you turn it back on. Nothing it already produced gets deleted.
 
 Two settings feed the newer agents:
 
-- `OWN_DOMAIN` (optional) — Aletheia's self-audit target. Set it to
-  Aurora's own site and Aletheia runs the same passive checks Momus runs on
-  prospects, against you. Leave it blank and Aletheia has nothing to check.
-- **System alerts** — Hephaestus (system health) emails immediately, not on
+- `OWN_DOMAIN` (optional) — Prism's self-audit target. Set it to
+  Aurora's own site and Prism runs the same passive checks Spectrum runs on
+  prospects, against you. Leave it blank and Prism has nothing to check.
+- **System alerts** — Core (system health) emails immediately, not on
   the daily digest, when configuration is missing, a dependency has
   drifted from `requirements.txt`, or another agent's last run failed.
   Recipients are every `owner`-role account plus anyone with the "system
@@ -165,14 +165,14 @@ Workflow (also described in the README): create a request on the
 Claude session that has the Vibe Prospecting connector enabled, then upload
 the resulting CSV back on that request's page. You'll confirm the column
 mapping (a best guess is pre-filled) before anything imports. From there,
-imported leads are scored and queued exactly like Apollo leads.
+imported leads are scored and queued exactly like Apollo.io leads.
 
-## 13. CRM sync — Charon (per client, optional)
+## 13. CRM sync — Wormhole (per client, optional)
 
-Charon (the **CRM Sync** page) lets your team paste a lead's details — an
+Wormhole (the **CRM Sync** page) lets your team paste a lead's details — an
 email, a form submission, call notes — and pushes the extracted contact
 straight into that specific client's own CRM. Each client's connection is
-configured once, on their client page, under "CRM connection — Charon"; no
+configured once, on their client page, under "CRM connection — Wormhole"; no
 credentials live in `.env`, because each client uses their own CRM account,
 not yours.
 
@@ -184,7 +184,7 @@ Pick a client's provider and fill in what it needs:
 - **Monday.com** — an API key, a board ID, and a column map. In the client's
   Monday account: avatar → Admin → API → generate a personal token. The
   board ID is the number in that board's URL. The column map is JSON
-  mapping Charon's fields (`full_name`, `first_name`, `last_name`, `email`,
+  mapping Wormhole's fields (`full_name`, `first_name`, `last_name`, `email`,
   `phone`, `company`, `source`, `notes`) to that board's column IDs, e.g.
   `{"email": "email_mkp8", "phone": "phone_mkp9"}` — find column IDs from
   the board's "..." menu → "Export board" or via Monday's API playground.
@@ -201,9 +201,9 @@ recorded in that client's sync log and on the CRM Sync page, so a bad key
 or a stale board ID shows up immediately instead of silently dropping a
 lead.
 
-## 14. Twilio + ElevenLabs — Peitho's phone channel (optional)
+## 14. Twilio + ElevenLabs — Beacon's phone channel (optional)
 
-Peitho can text and call leads, on top of email — SMS is a straightforward
+Beacon can text and call leads, on top of email — SMS is a straightforward
 send/receive; voice is a **one-way message**: a script gets drafted, synthesized
 into audio by ElevenLabs, and Twilio calls the lead and plays it back. This is
 not a live two-way phone conversation — a real-time voice agent (speech-to-text,
@@ -216,7 +216,7 @@ build and isn't included here.
    `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`.
 3. Set `TWILIO_FROM_NUMBER` to the number you bought, in E.164 format
    (`+15551234567`).
-4. For inbound SMS replies to reach Olympus, point that number's messaging
+4. For inbound SMS replies to reach Cosmos, point that number's messaging
    webhook (Console → Phone Numbers → your number → Messaging → "A message
    comes in") at `https://<your-domain>/webhooks/twilio-sms`. This only
    works once the app is deployed somewhere with a real HTTPS URL —
@@ -227,13 +227,13 @@ build and isn't included here.
    `ELEVENLABS_API_KEY`.
 2. Pick (or clone) a voice, and set `ELEVENLABS_VOICE_ID` to its id.
 3. Set `PUBLIC_BASE_URL` to your app's real HTTPS URL (e.g.
-   `https://olympus.up.railway.app`) — Twilio needs to fetch the synthesized
+   `https://cosmos.up.railway.app`) — Twilio needs to fetch the synthesized
    clip from a real internet address to play it on the call, so this has to
    be set before any voice call will work. It stays blank harmlessly until
    then; a voice send just fails with a clear error telling you to set it.
 
 **Using it**: on a lead's row on the `/leads` page, add their phone number
-(E.164 format), then use "Peitho: draft SMS" or "Peitho: draft call" —
+(E.164 format), then use "Beacon: draft SMS" or "Beacon: draft call" —
 both land in the same Approvals queue as email drafts, so nothing calls or
 texts a lead without a human clicking approve.
 
@@ -262,7 +262,7 @@ points — the first two weeks of this running are themselves how you find out
 those numbers, so don't over-trust a guess here.
 
 **The hard constraint that actually caps how fast you can scale this isn't
-Apollo credits or Claude tokens — it's Gmail deliverability.** Sending from a
+Apollo.io credits or Claude tokens — it's Gmail deliverability.** Sending from a
 real Gmail/Workspace address gets you much better reply rates than a bulk
 sending platform, but it comes with real limits:
 
@@ -275,7 +275,7 @@ sending platform, but it comes with real limits:
   Going from 25/day to 25/day for the first two weeks, then increasing, will
   get you to a sustainably higher volume faster than jumping straight to 100.
 - Every bounce or spam complaint hurts sender reputation more than a normal
-  send helps it — keep your lead list clean (Apollo email verification
+  send helps it — keep your lead list clean (Apollo.io email verification
   status, the `exclude_domains` list, sensible ICP filters) rather than
   maximizing raw volume.
 - If the math above says you need more daily volume than Gmail can sustain

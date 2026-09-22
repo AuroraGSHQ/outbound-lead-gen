@@ -12,7 +12,7 @@ def _settings(**overrides) -> Settings:
         twilio_from_number="+15550001111",
         elevenlabs_api_key="elkey",
         elevenlabs_voice_id="voice123",
-        public_base_url="https://olympus.example.com",
+        public_base_url="https://cosmos.example.com",
     )
     defaults.update(overrides)
     return Settings(**defaults)
@@ -71,7 +71,7 @@ def test_send_message_dispatches_voice(db_session, tmp_path):
     mock_synth.assert_called_once()
     mock_call.assert_called_once_with(
         "SIDXXX", "tokenXXX", "+15550001111", "+15550002222",
-        f"https://olympus.example.com/voice-clips/{message.id}.mp3",
+        f"https://cosmos.example.com/voice-clips/{message.id}.mp3",
     )
     assert result.status == MessageStatus.SENT.value
     assert result.twilio_sid == "CA123"

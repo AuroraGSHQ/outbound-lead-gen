@@ -1,5 +1,5 @@
 # Quarterly ad budget & platform allocation, from the Acquisition Manual §14.
-# Edit this as your real plan changes quarter to quarter — the Promoter agent
+# Edit this as your real plan changes quarter to quarter — the Orbit agent
 # (app/services/ads.py) reads whichever entry matches the current quarter to
 # generate that month's campaign brief. Keys under `allocation` become
 # platform names on the generated AdCampaign rows.

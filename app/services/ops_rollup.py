@@ -1,4 +1,4 @@
-"""Chronos — the monthly ops rollup. Distinct from Iris's (Courier) daily
+"""Epoch — the monthly ops rollup. Distinct from Relay's daily
 digest on purpose: a once-a-month management view of what's aging on the
 board, so the two can't duplicate each other's notifications.
 """
@@ -38,5 +38,5 @@ def send_monthly_rollup(session: Session, settings) -> dict[str, int]:
         for item in sorted(overdue, key=lambda i: i.created_at)[:10]:
             lines.append(f"  - [{item.category}] {item.title} (opened {item.created_at.date().isoformat()})")
 
-    notify_owner_now(settings, "Olympus: monthly ops rollup", "\n".join(lines))
+    notify_owner_now(settings, "Cosmos: monthly ops rollup", "\n".join(lines))
     return {"open_items": len(open_items), "overdue": len(overdue), "stale_scans": stale_scans}
